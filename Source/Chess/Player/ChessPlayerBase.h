@@ -6,20 +6,11 @@
 #include "Chess/Figures/MoveResult.h"
 #include "ChessPlayerBase.generated.h"
 
-class AChessFigureBase;
+class AFigureBase;
 class AChessBoardCell;
 
 /** Event to notify that move was performed */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMovePerformed);
-
-/**	Event to notify game finished
- *	Win codes:
- *	0 - Checkmate
- *	1 - Stalemate
- *	2 - Resign
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameFinished, AChessPlayerBase*, WinPlayer, int32, WinCode);
-
 
 UCLASS()
 class CHESS_API AChessPlayerBase : public APawn
@@ -42,7 +33,7 @@ public:
 		virtual void TriggerForMakeMove(bool bCondition);
 
 	UFUNCTION()
-		virtual void SelectFigure(AChessFigureBase* Figure);
+		virtual void SelectFigure(AFigureBase* Figure);
 
 	UFUNCTION()
 		virtual void SelectCell(AChessBoardCell* Cell);
@@ -53,14 +44,6 @@ public:
 	/** OnMovePerformed event */
 	UPROPERTY()
 		FOnMovePerformed OnMovePerformed;
-
-	/** OnGameFinished event */
-	UPROPERTY()
-		FOnGameFinished OnGameFinished;
-
-	/** Calculate available moves of of figures */
-	UFUNCTION()
-		virtual TArray<FMoveResult> CalculateAvailableMoves();
 	
 	UFUNCTION(BlueprintCallable, Category = "ChessPlayer")
 		virtual void Resign();
@@ -70,7 +53,7 @@ protected:
 		virtual void MakeMove(FMoveResult Move);
 
 	UPROPERTY()
-		AChessFigureBase* SelectedFigure;
+		AFigureBase* SelectedFigure;
 
 	UPROPERTY()
 		AChessBoardCell* SelectedCell;

@@ -79,7 +79,7 @@ void AChessHUD::ResetGame()
 
 	if (AChessGameMode* ChessGameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		ChessGameMode->GameFinished();
+		ChessGameMode->GameReset();
 	}
 
 	ShowMenuMain();

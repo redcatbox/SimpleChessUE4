@@ -1,11 +1,11 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "MoveBeatOnly.h"
-#include "ChessFigureBase.h"
+#include "FigureBase.h"
 #include "Chess/Board/ChessBoardCell.h"
 #include "Chess/Board/ChessBoard.h"
 
-TArray<FMoveResult> UMoveBeatOnly::CalculateMoveResults(AChessFigureBase* Figure, FIntPoint CellAddress)
+TArray<FMoveResult> UMoveBeatOnly::CalculateMoveResults(AFigureBase* Figure, FIntPoint CellAddress)
 {
 	TArray<FMoveResult> Result;
 
@@ -23,7 +23,7 @@ TArray<FMoveResult> UMoveBeatOnly::CalculateMoveResults(AChessFigureBase* Figure
 			AChessBoardCell* NextCell = Figure->GameBoard->GetCellByAddress(NewAddress);
 			if (NextCell)
 			{
-				AChessFigureBase* OtherFigure = Figure->GameBoard->GetFigureByAddress(NewAddress);
+				AFigureBase* OtherFigure = Figure->GameBoard->GetFigureByAddress(NewAddress);
 				if (OtherFigure)
 				{
 					if (Figure->GetTeamIndex() != OtherFigure->GetTeamIndex())

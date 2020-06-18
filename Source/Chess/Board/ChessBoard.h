@@ -7,6 +7,18 @@
 #include "ChessBoard.generated.h"
 
 class AChessBoardCell;
+class AChessPlayerBase;
+
+/** Event to notify game continue */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameContinue);
+
+/**	Event to notify game finished
+ *	Win codes:
+ *	0 - Checkmate
+ *	1 - Stalemate
+ *	2 - Resign
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameFinished, int32, WinTeamId, int32, WinCode);
 
 UCLASS()
 class CHESS_API AChessBoard : public AActor
@@ -30,6 +42,17 @@ public:
 
 	/** Create chess board */
 	void PrepareGameBoard();
+	
+	/** Evaluate with game rules */
+	void EvaluateGame();
+	
+	/** OnGameContinue event */
+	UPROPERTY()
+		FOnGameContinue OnGameContinue;
+	
+	/** OnGameFinished event */
+	UPROPERTY()
+		FOnGameFinished OnGameFinished;
 
 protected:
 	/** Create game cells */
@@ -43,19 +66,19 @@ protected:
 
 public:
 	FORCEINLINE TArray<AChessBoardCell*> GetCells() const { return GameCells; };
-	FORCEINLINE TArray<AChessFigureBase*> GetTeam1ActiveFigures() const { return Team1ActiveFigures; }
-	FORCEINLINE TArray<AChessFigureBase*> GetTeam2ActiveFigures() const { return Team2ActiveFigures; }
-	FORCEINLINE TArray<AChessFigureBase*> GetTeam1BeatenFigures() const { return Team1BeatenFigures; }
-	FORCEINLINE TArray<AChessFigureBase*> GetTeam2BeatenFigures() const { return Team2BeatenFigures; }
-
-	FORCEINLINE AChessFigureBase* GetKing1() const { return King1; }
-	FORCEINLINE AChessFigureBase* GetKing2() const { return King2; }
+	FORCEINLINE TArray<AFigureBase*> GetTeam1ActiveFigures() const { return Team1ActiveFigures; }
+	FORCEINLINE TArray<AFigureBase*> GetTeam2ActiveFigures() const { return Team2ActiveFigures; }
+	FORCEINLINE TArray<AFigureBase*> GetTeam1BeatenFigures() const { return Team1BeatenFigures; }
+	FORCEINLINE TArray<AFigureBase*> GetTeam2BeatenFigures() const { return Team2BeatenFigures; }
 	
 	UFUNCTION()
-		void MoveFigure(AChessFigureBase* Figure, FIntPoint Address);
+		void MoveFigure(AFigureBase* Figure, FIntPoint Address);
 
+	/** Calculate available moves of figures */
+	TArray<FMoveResult> CalculateFiguresMoves();
+	
 	AChessBoardCell* GetCellByAddress(FIntPoint Address);
-	AChessFigureBase* GetFigureByAddress(FIntPoint Address);
+	AFigureBase* GetFigureByAddress(FIntPoint Address);
 
 	/** Cleanup game board */
 	void Cleanup();
@@ -65,21 +88,21 @@ protected:
 		TArray<AChessBoardCell*> GameCells;
 
 	UPROPERTY()
-		TArray<AChessFigureBase*> Team1ActiveFigures;
+		TArray<AFigureBase*> Team1ActiveFigures;
 
 	UPROPERTY()
-		TArray<AChessFigureBase*> Team2ActiveFigures;
+		TArray<AFigureBase*> Team2ActiveFigures;
 
 	UPROPERTY()
 		TArray<AChessBoardCell*> CellsBeaten;
 
 	UPROPERTY()
-		TArray<AChessFigureBase*> Team1BeatenFigures;
+		TArray<AFigureBase*> Team1BeatenFigures;
 
 	UPROPERTY()
-		TArray<AChessFigureBase*> Team2BeatenFigures;
+		TArray<AFigureBase*> Team2BeatenFigures;
 	
-	void SetFigureBeaten(AChessFigureBase* Figure);
+	void SetFigureBeaten(AFigureBase* Figure);
 
 	void SwapFiguresOnCellsIds(int32 FirstCellId, int32 SecondCellId);
 
@@ -87,12 +110,12 @@ protected:
 	static FString CellAddressToHumanFormat(FIntPoint Address);
 
 	UPROPERTY()
-		AChessFigureBase* King1;
+		AFigureBase* King1;
 
 	UPROPERTY()
-		AChessFigureBase* King2;
+		AFigureBase* King2;
 	
 private:
 	UPROPERTY()
-		TMap<int32, TSubclassOf<class AChessFigureBase>> InitialFiguresLocations;
+		TMap<int32, TSubclassOf<class AFigureBase>> InitialFiguresLocations;
 };

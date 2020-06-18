@@ -12,7 +12,6 @@ class CHESS_API AChessPlayerAI : public AChessPlayerBase
 
 public:
 	virtual void TriggerForMakeMove(bool bCondition) override;
-	virtual TArray<FMoveResult> CalculateAvailableMoves() override;
 	
 	/** Calculate best move */
 	UFUNCTION()

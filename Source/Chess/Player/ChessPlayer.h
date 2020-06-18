@@ -15,7 +15,7 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void TriggerForMakeMove(bool bCondition) override;
-	virtual void SelectFigure(AChessFigureBase* Figure) override;
+	virtual void SelectFigure(AFigureBase* Figure) override;
 	virtual void MakeMove(FMoveResult Move) override;
 	virtual void Resign() override;
 
@@ -26,7 +26,6 @@ protected:
 	void TraceForCell(const FVector& Start, const FVector& End);
 	void CheckTraceForCell(FHitResult HitResult);
 	void TriggerClick();
-
 
 	UPROPERTY()
 		class USpringArmComponent* SpringArm;

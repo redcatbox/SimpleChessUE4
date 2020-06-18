@@ -4,19 +4,19 @@
 
 #include "GameFramework/Actor.h"
 #include "MoveBase.h"
-#include "ChessFigureBase.generated.h"
+#include "FigureBase.generated.h"
 
 class AChessBoard;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFigureMoveAnimFinished);
 
 UCLASS(Abstract)
-class CHESS_API AChessFigureBase : public AActor
+class CHESS_API AFigureBase : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	AChessFigureBase();
+	AFigureBase();
 	virtual void Tick(float DeltaSeconds) override;
 	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Mesh")

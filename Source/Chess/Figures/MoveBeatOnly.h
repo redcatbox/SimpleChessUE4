@@ -14,5 +14,5 @@ class CHESS_API UMoveBeatOnly : public UMoveRegular
 	GENERATED_BODY()
 
 public:
-	virtual TArray<FMoveResult> CalculateMoveResults(AChessFigureBase* Figure, FIntPoint CellAddress) override;
+	virtual TArray<FMoveResult> CalculateMoveResults(AFigureBase* Figure, FIntPoint CellAddress) override;
 };

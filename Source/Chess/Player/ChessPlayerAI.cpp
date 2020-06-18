@@ -25,7 +25,7 @@ FMoveResult AChessPlayerAI::Search(int32 Depth, bool bMax)
 		return CalculateBestMove();
 	}
 
-	TArray<FMoveResult> MoveResults = CalculateAvailableMoves();
+	TArray<FMoveResult> MoveResults = GameBoard->CalculateFiguresMoves();
 	FMoveResult Result;
 
 	//if (bMax)
@@ -50,28 +50,9 @@ FMoveResult AChessPlayerAI::Search(int32 Depth, bool bMax)
 	return Result;
 }
 
-TArray<FMoveResult> AChessPlayerAI::CalculateAvailableMoves()
-{
-	TArray<FMoveResult> Result;
-
-	for (auto& Figure : GameBoard->GetTeam1ActiveFigures())
-	{
-		Figure->CalculateMovesResults();
-		Result.Append(Figure->MoveResults);
-	}
-
-	for (auto& Figure : GameBoard->GetTeam2ActiveFigures())
-	{
-		Figure->CalculateMovesResults();
-		Result.Append(Figure->MoveResults);
-	}
-	
-	return Result;
-}
-
 FMoveResult AChessPlayerAI::CalculateBestMove()
 {
-	TArray<FMoveResult> AllMoves = CalculateAvailableMoves();
+	TArray<FMoveResult> AllMoves = GameBoard->CalculateFiguresMoves();
 	TArray<FMoveResult> TeamMoves;
 
 	for (auto& MR : AllMoves)

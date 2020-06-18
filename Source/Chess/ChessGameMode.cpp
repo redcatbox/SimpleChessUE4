@@ -10,18 +10,13 @@
 
 AChessGameMode::AChessGameMode()
 {
-	// Default player class
+	// Default classes
 	DefaultPawnClass = AChessPlayer::StaticClass();
-
-	// Player controller class
 	PlayerControllerClass = AChessPlayerController::StaticClass();
-
-	// HUD class
 	HUDClass = AChessHUD::StaticClass();
 
 	bHasActiveGame = false;
-	bGamePaused = false;
-	bPlayersMoveSwitch = false;
+	bPlayersMovesSwitch = false;
 	MovesCounter = -1;
 }
 
@@ -39,24 +34,26 @@ void AChessGameMode::BeginPlay()
 
 void AChessGameMode::StartChessGame()
 {
-	if (bGamePaused)
+	if (UGameplayStatics::IsGamePaused(GetWorld()))
 	{
 		TogglePause();
 	}
 
 	if (bHasActiveGame)
 	{
-		GameFinished();
+		GameReset();
 	}
 
 	FActorSpawnParameters SpawnInfo;
 	SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	FTransform SpawnTransform = FTransform();
+	FTransform SpawnTransform;
 
 	// Spawn and prepare game board
 	AActor* SpawnedActor = GetWorld()->SpawnActor(AChessBoard::StaticClass(), &SpawnTransform, SpawnInfo);
 	GameBoard = Cast<AChessBoard>(SpawnedActor);
 	GameBoard->PrepareGameBoard();
+	GameBoard->OnGameContinue.AddDynamic(this, &AChessGameMode::GameContinue);
+	GameBoard->OnGameFinished.AddDynamic(this, &AChessGameMode::GameFinished);
 
 	// Reference and setup player pawn
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
@@ -67,30 +64,24 @@ void AChessGameMode::StartChessGame()
 	SpawnedActor = GetWorld()->SpawnActor(AChessPlayerAI::StaticClass(), &SpawnTransform, SpawnInfo);
 	Player2 = Cast<AChessPlayerAI>(SpawnedActor);
 	SetupChessPlayer(Player2, 2);
-
+	
 	bHasActiveGame = true;
-	TogglePlayersMoves();
+	GameContinue();
 }
 
 void AChessGameMode::SetupChessPlayer(AChessPlayerBase* ChessPlayer, int32 TeamId)
 {
 	ChessPlayer->TeamIndex = TeamId;
 	ChessPlayer->GameBoard = GameBoard;
-	ChessPlayer->OnMovePerformed.AddDynamic(this, &AChessGameMode::TogglePlayersMoves);
-	ChessPlayer->OnGameFinished.AddDynamic(this, &AChessGameMode::GameFinished);
+	ChessPlayer->OnMovePerformed.AddDynamic(this, &AChessGameMode::GameEvaluate);
 }
 
-void AChessGameMode::TogglePlayersMoves()
+void AChessGameMode::GameContinue()
 {
-	bPlayersMoveSwitch = !bPlayersMoveSwitch;
+	bPlayersMovesSwitch = !bPlayersMovesSwitch;
 	MovesCounter++;
 
-	if (CheckGameFinished())
-	{
-		return;
-	}
-	
-	if (bPlayersMoveSwitch)
+	if (bPlayersMovesSwitch)
 	{
 		Player1->TriggerForMakeMove(true);
 		Player2->TriggerForMakeMove(false);
@@ -102,35 +93,41 @@ void AChessGameMode::TogglePlayersMoves()
 	}
 }
 
-void AChessGameMode::GameFinished()
+void AChessGameMode::GameEvaluate()
+{
+	GameBoard->EvaluateGame();
+}
+
+void AChessGameMode::GameReset()
 {
 	if (bHasActiveGame)
 	{
 		bHasActiveGame = false;
-		bPlayersMoveSwitch = false;
+		bPlayersMovesSwitch = false;
 		MovesCounter = -1;
 
 		if (GameBoard)
 		{
 			GameBoard->Cleanup();
+			GameBoard->OnGameContinue.RemoveDynamic(this, &AChessGameMode::GameContinue);
+			GameBoard->OnGameFinished.RemoveDynamic(this, &AChessGameMode::GameFinished);
 			GameBoard = nullptr;
 		}
 
-		Player1->OnMovePerformed.RemoveDynamic(this, &AChessGameMode::TogglePlayersMoves);
-		Player1->OnGameFinished.RemoveDynamic(this, &AChessGameMode::GameFinished);
+		Player1->OnMovePerformed.RemoveDynamic(this, &AChessGameMode::GameEvaluate);
+		
 		Player1 = nullptr;
 
 		if (Player2)
 		{
-			Player2->OnMovePerformed.RemoveDynamic(this, &AChessGameMode::TogglePlayersMoves);
-			Player2->OnGameFinished.RemoveDynamic(this, &AChessGameMode::GameFinished);
+			Player2->OnMovePerformed.RemoveDynamic(this, &AChessGameMode::GameEvaluate);
 			Player2->Destroy();
 			Player2 = nullptr;
 		}
 	}
 }
 
-void AChessGameMode::GameFinished(AChessPlayerBase* WinPlayer, int32 WinCode)
+void AChessGameMode::GameFinished(int32 WinTeamId, int32 WinCode)
 {
 	Player1->bCanMakeMove = false;
 	Player2->bCanMakeMove = false;
@@ -144,15 +141,15 @@ void AChessGameMode::GameFinished(AChessPlayerBase* WinPlayer, int32 WinCode)
 			
 			if (WinCode == 0)
 			{
-				InfoText = TEXT("Checkmate!" ) + FString::Printf(TEXT("Team %d wins!"), WinPlayer->TeamIndex);
+				InfoText = TEXT("Checkmate! ") + FString::Printf(TEXT("Team %d wins!"), WinTeamId);
 			}
 			else if (WinCode == 1)
 			{
-				InfoText = TEXT("Stalemate!" ) + FString::Printf(TEXT("Team %d wins!"), WinPlayer->TeamIndex);
+				InfoText = TEXT("Stalemate! ") + FString::Printf(TEXT("Team %d wins!"), WinTeamId);
 			}
 			else if (WinCode == 2)
 			{
-				InfoText = FString::Printf(TEXT("Team %d resigned!"), WinPlayer->TeamIndex);
+				InfoText = FString::Printf(TEXT("Team %d resigned!"), WinTeamId);
 			}
 
 			ChessHUD->FinishGame(FText::FromString(InfoText));
@@ -160,113 +157,7 @@ void AChessGameMode::GameFinished(AChessPlayerBase* WinPlayer, int32 WinCode)
 	}
 }
 
-bool AChessGameMode::CheckGameFinished()
-{
-	TArray<FMoveResult> AllMoves = Player2->CalculateAvailableMoves();
-	TArray<FMoveResult> Player1Moves;
-	TArray<FMoveResult> Player2Moves;
-
-	for (auto& M : AllMoves)
-	{
-		if (M.Figure->GetTeamIndex() == 1)
-		{
-			Player1Moves.Add(M);
-		}
-
-		if (M.Figure->GetTeamIndex() == 2)
-		{
-			Player2Moves.Add(M);
-		}
-	}
-
-	
-	//Stalemate
-	if (Player1Moves.Num() == 0)
-	{
-		Player1->OnGameFinished.Broadcast(Player1, 1);
-		return true;
-	}
-
-	if (Player2Moves.Num() == 0)
-	{
-		Player2->OnGameFinished.Broadcast(Player2, 1);
-		return true;
-	}
-	//Stalemate
-
-	
-	//Checkmate 1
-	if (GameBoard->GetKing1()->bIsBeaten)
-	{
-		Player1->OnGameFinished.Broadcast(Player2, 0);
-		return true;
-	}
-	
-	bool bKing1HasNoMoves = false;
-	bool bKing1IsUnderAttack = false;
-	GameBoard->GetKing1()->CalculateMovesResults();
-	if (GameBoard->GetKing1()->MoveResults.Num() == 0)
-	{
-		bKing1HasNoMoves = true;
-	}
-
-	AChessBoardCell* King1Cell = GameBoard->GetCellByAddress(GameBoard->GetKing1()->CellAddress);
-	for (auto& M : Player2Moves)
-	{
-		if (GameBoard->GetCellByAddress(M.CellAddress) == King1Cell)
-		{
-			bKing1IsUnderAttack = true;
-			break;
-		}
-	}
-
-	const bool bKing1Checkmate = bKing1HasNoMoves && bKing1IsUnderAttack;
-	if (bKing1Checkmate)
-	{
-		Player1->OnGameFinished.Broadcast(Player1, 0);
-		return true;
-	}
-	//Checkmate 1
-
-
-	//Checkmate 2
-	if (GameBoard->GetKing2()->bIsBeaten)
-	{
-		Player2->OnGameFinished.Broadcast(Player1, 0);
-		return true;
-	}
-	
-	bool bKing2HasNoMoves = false;
-	bool bKing2IsUnderAttack = false;
-	GameBoard->GetKing2()->CalculateMovesResults();
-	if (GameBoard->GetKing2()->MoveResults.Num() == 0)
-	{
-		bKing2HasNoMoves = true;
-	}
-
-	AChessBoardCell* King2Cell = GameBoard->GetCellByAddress(GameBoard->GetKing2()->CellAddress);
-	for (auto& M : Player1Moves)
-	{
-		if (GameBoard->GetCellByAddress(M.CellAddress) == King2Cell)
-		{
-			bKing2IsUnderAttack = true;
-			break;
-		}
-	}
-	
-	const bool bKing2Checkmate = bKing2HasNoMoves && bKing2IsUnderAttack;
-	if (bKing2Checkmate)
-	{
-		Player2->OnGameFinished.Broadcast(Player1, 0);
-		return true;
-	}
-
-	return false;
-}
-
 bool AChessGameMode::TogglePause()
 {
-	bGamePaused = !bGamePaused;
-	UGameplayStatics::SetGamePaused(this, bGamePaused);
-	return bGamePaused;
+	return UGameplayStatics::SetGamePaused(this, !UGameplayStatics::IsGamePaused(GetWorld()));
 }

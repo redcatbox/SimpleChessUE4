@@ -1,9 +1,9 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "MoveFirstOnly.h"
-#include "ChessFigureBase.h"
+#include "FigureBase.h"
 
-TArray<FMoveResult> UMoveFirstOnly::CalculateMoveResults(AChessFigureBase* Figure, FIntPoint CellAddress)
+TArray<FMoveResult> UMoveFirstOnly::CalculateMoveResults(AFigureBase* Figure, FIntPoint CellAddress)
 {
 	TArray<FMoveResult> Result;
 

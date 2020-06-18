@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "MoveRegular.h"
+#include "MoveOnly.h"
 #include "MoveCastling.generated.h"
 
 /** Castling types */
@@ -15,9 +15,12 @@ enum class ECastlingType : uint8
 
 /** Castling move */
 UCLASS()
-class CHESS_API UMoveCastling : public UMoveBase
+class CHESS_API UMoveCastling : public UMoveOnly
 {
 	GENERATED_BODY()
+
+public:
+	virtual TArray<FMoveResult> CalculateMoveResults(AFigureBase* Figure, FIntPoint CellAddress) override;
 
 	UPROPERTY()
 		ECastlingType CastlingType;

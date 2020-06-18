@@ -7,7 +7,7 @@
 #include "MoveBase.generated.h"
 
 class AChessBoardCell;
-class AChessFigureBase;
+class AFigureBase;
 
 /**	Base abstract class for figure move */
 UCLASS(Abstract)
@@ -18,5 +18,5 @@ class CHESS_API UMoveBase : public UObject
 public:
 	/** Calculates array of move results with move values and cells */
 	UFUNCTION()
-		virtual TArray<FMoveResult> CalculateMoveResults(AChessFigureBase* Figure, FIntPoint CellAddress);
+		virtual TArray<FMoveResult> CalculateMoveResults(AFigureBase* Figure, FIntPoint CellAddress);
 };

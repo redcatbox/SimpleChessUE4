@@ -2,7 +2,7 @@
 
 #include "MoveBase.h"
 
-TArray<FMoveResult> UMoveBase::CalculateMoveResults(AChessFigureBase* Figure, FIntPoint CellAddress)
+TArray<FMoveResult> UMoveBase::CalculateMoveResults(AFigureBase* Figure, FIntPoint CellAddress)
 {
 	TArray<FMoveResult> Result;
 	return Result;

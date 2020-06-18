@@ -1,6 +1,6 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
-#include "ChessFigureBase.h"
+#include "FigureBase.h"
 #include "Chess/Board/ChessBoardCell.h"
 #include "MoveRegular.h"
 
@@ -11,7 +11,7 @@
 #include "FigureQueen.h"
 #include "FigureRook.h"
 
-AChessFigureBase::AChessFigureBase()
+AFigureBase::AFigureBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
@@ -42,13 +42,13 @@ AChessFigureBase::AChessFigureBase()
 	Alpha = 0.f;
 }
 
-void AChessFigureBase::SetTeam(int32 TeamId)
+void AFigureBase::SetTeam(int32 TeamId)
 {
 	TeamIndex = TeamId;
 	SetMaterialByTeam(TeamId);
 }
 
-void AChessFigureBase::SetMaterialByTeam(int32 TeamId)
+void AFigureBase::SetMaterialByTeam(int32 TeamId)
 {
 	if (TeamsMaterials.Num() >= TeamIndex)
 	{
@@ -56,7 +56,7 @@ void AChessFigureBase::SetMaterialByTeam(int32 TeamId)
 	}
 }
 
-bool AChessFigureBase::CheckIsCellReachable(FIntPoint Cell)
+bool AFigureBase::CheckIsCellReachable(FIntPoint Cell)
 {
 	if (CellsAvailableToMove.Contains(Cell))
 	{
@@ -66,7 +66,7 @@ bool AChessFigureBase::CheckIsCellReachable(FIntPoint Cell)
 	return false;
 }
 
-void AChessFigureBase::CalculateMovesResults()
+void AFigureBase::CalculateMovesResults()
 {
 	MoveResults.Empty();
 
@@ -84,7 +84,7 @@ void AChessFigureBase::CalculateMovesResults()
 	}
 }
 
-void AChessFigureBase::Tick(float DeltaSeconds)
+void AFigureBase::Tick(float DeltaSeconds)
 {
 	if (bMoveFigure)
 	{
@@ -105,14 +105,14 @@ void AChessFigureBase::Tick(float DeltaSeconds)
 	}
 }
 
-void AChessFigureBase::PlayMoveFigureAnim(FVector LocFrom, FVector LocTo)
+void AFigureBase::PlayMoveFigureAnim(FVector LocFrom, FVector LocTo)
 {
 	bMoveFigure = true;
 	MoveFrom = LocFrom;
 	MoveTo = LocTo;
 }
 
-int32 AChessFigureBase::GetFigureValue()
+int32 AFigureBase::GetFigureValue()
 {
 	int32 Result = 0;
 

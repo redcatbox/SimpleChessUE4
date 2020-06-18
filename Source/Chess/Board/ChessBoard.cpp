@@ -4,14 +4,12 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "Chess/Figures/FigurePawn.h"
 #include "Chess/Figures/FigureBishop.h"
-#include "Chess/Figures/FigureKnight.h"
-#include "Chess/Figures/FigureRook.h"
 #include "Chess/Figures/FigureKing.h"
+#include "Chess/Figures/FigureKnight.h"
+#include "Chess/Figures/FigurePawn.h"
 #include "Chess/Figures/FigureQueen.h"
-
-#define LOCTEXT_NAMESPACE "ChessBoard"
+#include "Chess/Figures/FigureRook.h"
 
 AChessBoard::AChessBoard()
 {
@@ -88,7 +86,7 @@ void AChessBoard::CreateNonGameCells()
 	const int32 NumCellsY = NumCellsX * 2;
 	const int32 NumCellsTotal = NumCellsX * NumCellsY;
 	const FVector2D Size = FVector2D(NumCellsY * CellSpacing, NumCellsX * CellSpacing);
-	const FVector InitialOffset = FVector(0.f, CellSpacing * 7, 0.f) + GetActorLocation();
+	const FVector InitialOffset = FVector(0.f, CellSpacing * 6.5f, 0.f) + GetActorLocation();
 
 	for (int32 CellIndex = 0; CellIndex < NumCellsTotal; CellIndex++)
 	{
@@ -113,13 +111,13 @@ void AChessBoard::CreateFigures()
 		{
 			if (Entry.Key <= GameCells.Num())
 			{
-				AChessFigureBase* Figure;
+				AFigureBase* Figure;
 				FActorSpawnParameters SpawnInfo;
 				SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				//Team1
 				int32 Index = Entry.Key;
-				Figure = GetWorld()->SpawnActor<AChessFigureBase>(Entry.Value, GameCells[Index]->GetActorTransform(), SpawnInfo);
+				Figure = GetWorld()->SpawnActor<AFigureBase>(Entry.Value, GameCells[Index]->GetActorTransform(), SpawnInfo);
 				Figure->SetTeam(1);
 				Figure->GameBoard = this;
 				Figure->CellAddress = GameCells[Index]->CellAddress;
@@ -131,7 +129,7 @@ void AChessBoard::CreateFigures()
 
 				//Team2
 				Index = GameCells.Num() - 1 - Entry.Key;
-				Figure = GetWorld()->SpawnActor<AChessFigureBase>(Entry.Value, GameCells[Index]->GetActorTransform(), SpawnInfo);
+				Figure = GetWorld()->SpawnActor<AFigureBase>(Entry.Value, GameCells[Index]->GetActorTransform(), SpawnInfo);
 				Figure->SetTeam(2);
 				Figure->GameBoard = this;
 				Figure->CellAddress = GameCells[Index]->CellAddress;
@@ -201,8 +199,8 @@ void AChessBoard::Cleanup()
 
 void AChessBoard::SwapFiguresOnCellsIds(int32 FirstCellId, int32 SecondCellId)
 {
-	AChessFigureBase* F1 = GetFigureByAddress(GameCells[FirstCellId]->CellAddress);
-	AChessFigureBase* F2 = GetFigureByAddress(GameCells[SecondCellId]->CellAddress);
+	AFigureBase* F1 = GetFigureByAddress(GameCells[FirstCellId]->CellAddress);
+	AFigureBase* F2 = GetFigureByAddress(GameCells[SecondCellId]->CellAddress);
 
 	if (F1 && F2)
 	{
@@ -213,7 +211,7 @@ void AChessBoard::SwapFiguresOnCellsIds(int32 FirstCellId, int32 SecondCellId)
 	}
 }
 
-void AChessBoard::MoveFigure(AChessFigureBase* Figure, FIntPoint Address)
+void AChessBoard::MoveFigure(AFigureBase* Figure, FIntPoint Address)
 {
 	if (Figure)
 	{
@@ -227,7 +225,7 @@ void AChessBoard::MoveFigure(AChessFigureBase* Figure, FIntPoint Address)
 			//const FString Log = CellAddressToHumanFormat(Figure->CellAddress) + TEXT(" -> ") + CellAddressToHumanFormat(Address);
 			//UE_LOG(LogTemp, Warning, TEXT("Team %d %s %s"), Figure->GetTeamIndex(), *Figure->FriendlyName, *Log);
 
-			AChessFigureBase* OtherFigure = GetFigureByAddress(Address);
+			AFigureBase* OtherFigure = GetFigureByAddress(Address);
 			if (OtherFigure)
 			{
 				// Move beaten figure out of board
@@ -243,7 +241,7 @@ void AChessBoard::MoveFigure(AChessFigureBase* Figure, FIntPoint Address)
 	}
 }
 
-void AChessBoard::SetFigureBeaten(AChessFigureBase* Figure)
+void AChessBoard::SetFigureBeaten(AFigureBase* Figure)
 {
 	Figure->bIsBeaten = true;
 
@@ -279,6 +277,129 @@ void AChessBoard::SetFigureBeaten(AChessFigureBase* Figure)
 	}
 }
 
+TArray<FMoveResult> AChessBoard::CalculateFiguresMoves()
+{
+	TArray<FMoveResult> Result;
+
+	for (auto& Figure : Team1ActiveFigures)
+	{
+		Figure->CalculateMovesResults();
+		Result.Append(Figure->MoveResults);
+	}
+
+	for (auto& Figure : Team2ActiveFigures)
+	{
+		Figure->CalculateMovesResults();
+		Result.Append(Figure->MoveResults);
+	}
+
+	return Result;
+}
+
+void AChessBoard::EvaluateGame()
+{
+	TArray<FMoveResult> AllMoves = CalculateFiguresMoves();
+	TArray<FMoveResult> Team1Moves;
+	TArray<FMoveResult> Team2Moves;
+
+	for (auto& M : AllMoves)
+	{
+		if (M.Figure->GetTeamIndex() == 1)
+		{
+			Team1Moves.Add(M);
+		}
+
+		if (M.Figure->GetTeamIndex() == 2)
+		{
+			Team2Moves.Add(M);
+		}
+	}
+
+
+	//Stalemate
+	if (Team1Moves.Num() == 0)
+	{
+		OnGameFinished.Broadcast(1, 1);
+		return;
+	}
+
+	if (Team2Moves.Num() == 0)
+	{
+		OnGameFinished.Broadcast(2, 1);
+		return;
+	}
+	//Stalemate
+
+
+	//Checkmate 1
+	if (King1->bIsBeaten)
+	{
+		OnGameFinished.Broadcast(2, 0);
+		return;
+	}
+
+	bool bKing1HasNoMoves = false;
+	bool bKing1IsUnderAttack = false;
+	King1->CalculateMovesResults();
+	if (King1->MoveResults.Num() == 0)
+	{
+		bKing1HasNoMoves = true;
+	}
+
+	AChessBoardCell* King1Cell = GetCellByAddress(King1->CellAddress);
+	for (auto& M : Team2Moves)
+	{
+		if (GetCellByAddress(M.CellAddress) == King1Cell)
+		{
+			bKing1IsUnderAttack = true;
+			break;
+		}
+	}
+
+	const bool bKing1Checkmate = bKing1HasNoMoves && bKing1IsUnderAttack;
+	if (bKing1Checkmate)
+	{
+		OnGameFinished.Broadcast(1, 0);
+		return;
+	}
+	//Checkmate 1
+
+
+	//Checkmate 2
+	if (King2->bIsBeaten)
+	{
+		OnGameFinished.Broadcast(1, 0);
+		return;
+	}
+
+	bool bKing2HasNoMoves = false;
+	bool bKing2IsUnderAttack = false;
+	King2->CalculateMovesResults();
+	if (King2->MoveResults.Num() == 0)
+	{
+		bKing2HasNoMoves = true;
+	}
+
+	AChessBoardCell* King2Cell = GetCellByAddress(King2->CellAddress);
+	for (auto& M : Team1Moves)
+	{
+		if (GetCellByAddress(M.CellAddress) == King2Cell)
+		{
+			bKing2IsUnderAttack = true;
+			break;
+		}
+	}
+
+	const bool bKing2Checkmate = bKing2HasNoMoves && bKing2IsUnderAttack;
+	if (bKing2Checkmate)
+	{
+		OnGameFinished.Broadcast(1, 0);
+		return;
+	}
+
+	OnGameContinue.Broadcast();
+}
+
 AChessBoardCell* AChessBoard::GetCellByAddress(FIntPoint Address)
 {
 	const bool bAddressInBoardLimits =
@@ -299,7 +420,7 @@ AChessBoardCell* AChessBoard::GetCellByAddress(FIntPoint Address)
 	return nullptr;
 }
 
-AChessFigureBase* AChessBoard::GetFigureByAddress(FIntPoint Address)
+AFigureBase* AChessBoard::GetFigureByAddress(FIntPoint Address)
 {
 	for (auto& Figure : Team1ActiveFigures)
 	{
@@ -356,5 +477,3 @@ FString AChessBoard::CellAddressToHumanFormat(FIntPoint Address)
 	Result += FString::FromInt(Address.Y + 1);
 	return Result;
 }
-
-#undef LOCTEXT_NAMESPACE

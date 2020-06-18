@@ -30,7 +30,7 @@ void AChessPlayerBase::PerformMove()
 	OnMovePerformed.Broadcast();
 }
 
-void AChessPlayerBase::SelectFigure(AChessFigureBase* Figure)
+void AChessPlayerBase::SelectFigure(AFigureBase* Figure)
 {
 	for (auto& Cell : CellsToTurnOff)
 	{
@@ -86,12 +86,6 @@ void AChessPlayerBase::MakeMove(FMoveResult Move)
 		GameBoard->MoveFigure(Move.Figure, Move.CellAddress);
 		SelectedFigure->OnFigureMoveAnimFinished.AddDynamic(this, &AChessPlayerBase::PerformMove);
 	}
-}
-
-TArray<FMoveResult> AChessPlayerBase::CalculateAvailableMoves()
-{
-	TArray<FMoveResult> Result;
-	return Result;
 }
 
 void AChessPlayerBase::Resign() {}

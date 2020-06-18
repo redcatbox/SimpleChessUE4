@@ -71,6 +71,8 @@ void AChessPlayer::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 
 void AChessPlayer::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location) {}
 
+
+
 void AChessPlayer::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -138,7 +140,7 @@ void AChessPlayer::TriggerClick()
 {
 	if (bCanMakeMove && CurrentCellFocus)
 	{
-		AChessFigureBase* OtherFigure = GameBoard->GetFigureByAddress(CurrentCellFocus->CellAddress);
+		AFigureBase* OtherFigure = GameBoard->GetFigureByAddress(CurrentCellFocus->CellAddress);
 		if (OtherFigure)
 		{
 			if (TeamIndex == OtherFigure->GetTeamIndex())
@@ -201,7 +203,7 @@ void AChessPlayer::UpdateCellsToHighlight()
 	}
 }
 
-void AChessPlayer::SelectFigure(AChessFigureBase* Figure)
+void AChessPlayer::SelectFigure(AFigureBase* Figure)
 {
 	for (auto& Cell : CellsToTurnOff)
 	{
@@ -240,5 +242,5 @@ void AChessPlayer::SelectFigure(AChessFigureBase* Figure)
 
 void AChessPlayer::Resign()
 {
-	OnGameFinished.Broadcast(this, 2);
+	GameBoard->OnGameFinished.Broadcast(TeamIndex, 2);
 }

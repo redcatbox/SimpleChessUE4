@@ -6,7 +6,7 @@
 #include "MoveResult.generated.h"
 
 class AChessBoardCell;
-class AChessFigureBase;
+class AFigureBase;
 
 USTRUCT()
 struct FMoveResult
@@ -20,7 +20,7 @@ struct FMoveResult
 		FIntPoint CellAddress;
 
 	UPROPERTY()
-		AChessFigureBase* Figure;
+		AFigureBase* Figure;
 
 	FMoveResult()
 	{
@@ -29,7 +29,7 @@ struct FMoveResult
 		this->Figure = nullptr;
 	}
 
-	FMoveResult(int32 Value, FIntPoint CellAddress, AChessFigureBase* Figure)
+	FMoveResult(int32 Value, FIntPoint CellAddress, AFigureBase* Figure)
 	{
 		this->Value = Value;
 		this->CellAddress = CellAddress;

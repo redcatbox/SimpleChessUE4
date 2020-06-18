@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "ChessFigureBase.h"
+#include "FigureBase.h"
 #include "FigureQueen.generated.h"
 
 UCLASS()
-class AFigureQueen : public AChessFigureBase
+class AFigureQueen : public AFigureBase
 {
 	GENERATED_BODY()
 
