@@ -16,10 +16,10 @@ void AChessPlayerBase::TriggerForMakeMove(bool bCondition)
 
 void AChessPlayerBase::PerformMove()
 {
-	if (SelectedFigure)
+	if (SelectedPiece)
 	{
-		SelectedFigure->OnFigureMoveAnimFinished.RemoveDynamic(this, &AChessPlayerBase::PerformMove);
-		SelectFigure(nullptr);
+		SelectedPiece->OnPieceMoveAnimFinished.RemoveDynamic(this, &AChessPlayerBase::PerformMove);
+		SelectPiece(nullptr);
 	}
 
 	if (SelectedCell)
@@ -30,7 +30,7 @@ void AChessPlayerBase::PerformMove()
 	OnMovePerformed.Broadcast();
 }
 
-void AChessPlayerBase::SelectFigure(AFigureBase* Figure)
+void AChessPlayerBase::SelectPiece(APieceBase* Piece)
 {
 	for (auto& Cell : CellsToTurnOff)
 	{
@@ -40,11 +40,11 @@ void AChessPlayerBase::SelectFigure(AFigureBase* Figure)
 	}
 
 	CellsToTurnOff.Empty();
-	SelectedFigure = Figure;
+	SelectedPiece = Piece;
 
-	if (SelectedFigure)
+	if (SelectedPiece)
 	{
-		AChessBoardCell* Cell = GameBoard->GetCellByAddress(SelectedFigure->CellAddress);
+		AChessBoardCell* Cell = GameBoard->GetCellByAddress(SelectedPiece->CellAddress);
 		if (Cell)
 		{
 			Cell->Highlight(false);
@@ -71,11 +71,11 @@ void AChessPlayerBase::SelectCell(AChessBoardCell* Cell)
 	}
 }
 
-void AChessPlayerBase::MakeMove(FMoveResult Move)
+void AChessPlayerBase::MakeMove(FMoveInfo Move)
 {
-	if (Move.Figure)
+	if (Move.Piece)
 	{
-		SelectFigure(Move.Figure);
+		SelectPiece(Move.Piece);
 
 		AChessBoardCell* Cell = GameBoard->GetCellByAddress(Move.CellAddress);
 		if (Cell)
@@ -83,8 +83,8 @@ void AChessPlayerBase::MakeMove(FMoveResult Move)
 			SelectCell(Cell);
 		}
 
-		GameBoard->MoveFigure(Move.Figure, Move.CellAddress);
-		SelectedFigure->OnFigureMoveAnimFinished.AddDynamic(this, &AChessPlayerBase::PerformMove);
+		GameBoard->MovePiece(Move.Piece, Move.CellAddress);
+		SelectedPiece->OnPieceMoveAnimFinished.AddDynamic(this, &AChessPlayerBase::PerformMove);
 	}
 }
 

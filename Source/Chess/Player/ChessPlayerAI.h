@@ -15,9 +15,9 @@ public:
 	
 	/** Calculate best move */
 	UFUNCTION()
-		FMoveResult CalculateBestMove();
+		FMoveInfo CalculateBestMove();
 	
 	/** Recursive search */
 	UFUNCTION()
-		FMoveResult Search(int32 Depth, bool bMax);
+		FMoveInfo Search(int32 Depth, bool bMax);
 };

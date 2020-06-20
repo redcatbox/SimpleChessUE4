@@ -3,7 +3,6 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "Chess/Figures/FigureBase.h"
 #include "ChessBoardCell.generated.h"
 
 /** A board cell that can be clicked */

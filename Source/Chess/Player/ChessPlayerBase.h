@@ -3,10 +3,10 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
-#include "Chess/Figures/MoveResult.h"
+#include "Chess/Pieces/MoveInfo.h"
 #include "ChessPlayerBase.generated.h"
 
-class AFigureBase;
+class APieceBase;
 class AChessBoardCell;
 
 /** Event to notify that move was performed */
@@ -33,7 +33,7 @@ public:
 		virtual void TriggerForMakeMove(bool bCondition);
 
 	UFUNCTION()
-		virtual void SelectFigure(AFigureBase* Figure);
+		virtual void SelectPiece(APieceBase* Piece);
 
 	UFUNCTION()
 		virtual void SelectCell(AChessBoardCell* Cell);
@@ -50,10 +50,10 @@ public:
 	
 protected:
 	UFUNCTION()
-		virtual void MakeMove(FMoveResult Move);
+		virtual void MakeMove(FMoveInfo Move);
 
 	UPROPERTY()
-		AFigureBase* SelectedFigure;
+		APieceBase* SelectedPiece;
 
 	UPROPERTY()
 		AChessBoardCell* SelectedCell;

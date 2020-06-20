@@ -13,7 +13,4 @@ class CHESS_API AChessPlayerController : public APlayerController
 
 public:
 	AChessPlayerController();
-
-protected:
-	virtual void BeginPlay() override;
 };

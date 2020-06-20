@@ -3,17 +3,19 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "ChessBoardCell.h"
+#include "Chess/Pieces/MoveInfo.h"
+#include "Chess/Pieces/PieceInfo.h"
+#include "Chess/Pieces/PieceBase.h"
+#include "Chess/Board/ChessBoardCell.h"
 #include "ChessBoard.generated.h"
 
-class AChessBoardCell;
 class AChessPlayerBase;
 
 /** Event to notify game continue */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameContinue);
 
 /**	Event to notify game finished
- *	Win codes:
+ *	Finish codes:
  *	0 - Checkmate
  *	1 - Stalemate
  *	2 - Resign
@@ -61,24 +63,24 @@ protected:
 	/** Create non game cells */
 	void CreateNonGameCells();
 
-	/** Create figures */
-	void CreateFigures();
+	/** Create Pieces */
+	void CreatePieces();
 
 public:
 	FORCEINLINE TArray<AChessBoardCell*> GetCells() const { return GameCells; };
-	FORCEINLINE TArray<AFigureBase*> GetTeam1ActiveFigures() const { return Team1ActiveFigures; }
-	FORCEINLINE TArray<AFigureBase*> GetTeam2ActiveFigures() const { return Team2ActiveFigures; }
-	FORCEINLINE TArray<AFigureBase*> GetTeam1BeatenFigures() const { return Team1BeatenFigures; }
-	FORCEINLINE TArray<AFigureBase*> GetTeam2BeatenFigures() const { return Team2BeatenFigures; }
+	FORCEINLINE TArray<APieceBase*> GetTeam1ActivePieces() const { return Team1ActivePieces; }
+	FORCEINLINE TArray<APieceBase*> GetTeam2ActivePieces() const { return Team2ActivePieces; }
+	FORCEINLINE TArray<APieceBase*> GetTeam1BeatenPieces() const { return Team1BeatenPieces; }
+	FORCEINLINE TArray<APieceBase*> GetTeam2BeatenPieces() const { return Team2BeatenPieces; }
 	
 	UFUNCTION()
-		void MoveFigure(AFigureBase* Figure, FIntPoint Address);
+		void MovePiece(APieceBase* Piece, FIntPoint Address);
 
-	/** Calculate available moves of figures */
-	TArray<FMoveResult> CalculateFiguresMoves();
+	/** Calculate available moves of Pieces */
+	TArray<FMoveInfo> CalculatePiecesMoves();
 	
 	AChessBoardCell* GetCellByAddress(FIntPoint Address);
-	AFigureBase* GetFigureByAddress(FIntPoint Address);
+	APieceBase* GetPieceByAddress(FIntPoint Address);
 
 	/** Cleanup game board */
 	void Cleanup();
@@ -88,34 +90,48 @@ protected:
 		TArray<AChessBoardCell*> GameCells;
 
 	UPROPERTY()
-		TArray<AFigureBase*> Team1ActiveFigures;
+		TArray<APieceBase*> Team1ActivePieces;
 
 	UPROPERTY()
-		TArray<AFigureBase*> Team2ActiveFigures;
+		TArray<APieceBase*> Team2ActivePieces;
 
 	UPROPERTY()
-		TArray<AChessBoardCell*> CellsBeaten;
+		TArray<AChessBoardCell*> CellsBeaten1;
 
 	UPROPERTY()
-		TArray<AFigureBase*> Team1BeatenFigures;
+		TArray<AChessBoardCell*> CellsBeaten2;
 
 	UPROPERTY()
-		TArray<AFigureBase*> Team2BeatenFigures;
-	
-	void SetFigureBeaten(AFigureBase* Figure);
+		TArray<APieceBase*> Team1BeatenPieces;
 
-	void SwapFiguresOnCellsIds(int32 FirstCellId, int32 SecondCellId);
+	UPROPERTY()
+		TArray<APieceBase*> Team2BeatenPieces;
+
+	/** Sets piece beaten and moves it to beaten cells */
+	void SetPieceBeaten(APieceBase* Piece);
+
+	/** Swaps pieces on provided cells */
+	void SwapPiecesOnCells(AChessBoardCell* FirstCell, AChessBoardCell* SecondCell);
 
 	/** Convert CellAddress to A-H 1-8 format */
-	static FString CellAddressToHumanFormat(FIntPoint Address);
+	static FString CellAddressToHumanFormat(FIntPoint& Address);
 
-	UPROPERTY()
-		AFigureBase* King1;
+	/** Convert A-H 1-8 format to CellAddress */
+	static FIntPoint HumanFormatToCellAddress(FString& Info);
 
-	UPROPERTY()
-		AFigureBase* King2;
+	/** Convert 1/2, K/Q/R/B/N/(P) and A-H 1-8 format to piece info */
+	static FPieceInfo HumanFormatToPieceInfo(FString& Info);
 	
-private:
 	UPROPERTY()
-		TMap<int32, TSubclassOf<class AFigureBase>> InitialFiguresLocations;
+		APieceBase* King1;
+
+	UPROPERTY()
+		APieceBase* King2;
+
+private:
+	//UPROPERTY()
+	//	TMap<int32, TSubclassOf<class APieceBase>> InitialPiecesLocations;
+
+	UPROPERTY()
+		TArray<FString> StartingPositions;
 };

@@ -15,29 +15,26 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void TriggerForMakeMove(bool bCondition) override;
-	virtual void SelectFigure(AFigureBase* Figure) override;
-	virtual void MakeMove(FMoveResult Move) override;
+	virtual void SelectPiece(APieceBase* Piece) override;
+	virtual void MakeMove(FMoveInfo Move) override;
 	virtual void Resign() override;
+	void AdjustCamera();
 
 protected:
 	void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
-	void CameraZoom(float Val);
 	void TraceForCell(const FVector& Start, const FVector& End);
 	void CheckTraceForCell(FHitResult HitResult);
 	void TriggerClick();
 
-	UPROPERTY()
+	UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
 		class USpringArmComponent* SpringArm;
 
-	UPROPERTY()
+	UPROPERTY(VisibleDefaultsOnly, Category = "Camera")
 		class UCameraComponent* CameraComponent;
 
 	UPROPERTY()
 		AChessBoardCell* CurrentCellFocus;
-
-	UPROPERTY()
-		bool bCameraRotation;
 
 	UPROPERTY()
 		bool bCanTraceForCells;
