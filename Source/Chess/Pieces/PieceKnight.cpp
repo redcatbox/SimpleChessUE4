@@ -5,8 +5,6 @@
 
 APieceKnight::APieceKnight()
 {
-	FriendlyName = TEXT("Knight");
-
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SMObj(TEXT("/Game/Pieces/SM_Pyramid_01.SM_Pyramid_01"));
 	if (SMObj.Object)
 	{

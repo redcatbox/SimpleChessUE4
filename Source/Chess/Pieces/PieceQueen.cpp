@@ -5,8 +5,6 @@
 
 APieceQueen::APieceQueen()
 {
-	FriendlyName = TEXT("Queen");
-
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SMObj(TEXT("/Game/Pieces/SM_Sphere_01.SM_Sphere_01"));
 	if (SMObj.Object)
 	{

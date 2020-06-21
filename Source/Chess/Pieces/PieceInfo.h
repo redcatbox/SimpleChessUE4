@@ -27,4 +27,9 @@ struct FPieceInfo
 		this->PieceClass = PieceClass;
 		this->CellAddress = CellAddress;
 	}
+
+	FString ToString() const
+	{
+		return FString::Printf(TEXT("TeamId = %d, PieceClass = %s, CellAddress = %s"), TeamId, PieceClass, *CellAddress.ToString());
+	}
 };

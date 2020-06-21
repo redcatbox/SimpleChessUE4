@@ -5,8 +5,6 @@
 
 APieceKing::APieceKing()
 {
-	FriendlyName = TEXT("King");
-
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SMObj(TEXT("/Game/Pieces/SM_Cube_02.SM_Cube_02"));
 	if (SMObj.Object)
 	{

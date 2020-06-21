@@ -5,8 +5,6 @@
 
 APieceBishop::APieceBishop()
 {
-	FriendlyName = TEXT("Bishop");
-
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SMObj(TEXT("/Game/Pieces/SM_Cube_03.SM_Cube_03"));
 	if (SMObj.Object)
 	{

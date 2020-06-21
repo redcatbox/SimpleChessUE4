@@ -54,23 +54,6 @@ AChessBoard::AChessBoard()
 	StartingPositions.Add(TEXT("2Bf8"));
 	StartingPositions.Add(TEXT("2Ng8"));
 	StartingPositions.Add(TEXT("2Rh8"));
-
-	//InitialPiecesLocations.Add(0, APieceRook::StaticClass());
-	//InitialPiecesLocations.Add(1, APieceKnight::StaticClass());
-	//InitialPiecesLocations.Add(2, APieceBishop::StaticClass());
-	//InitialPiecesLocations.Add(3, APieceQueen::StaticClass());
-	//InitialPiecesLocations.Add(4, APieceKing::StaticClass());
-	//InitialPiecesLocations.Add(5, APieceBishop::StaticClass());
-	//InitialPiecesLocations.Add(6, APieceKnight::StaticClass());
-	//InitialPiecesLocations.Add(7, APieceRook::StaticClass());
-	//InitialPiecesLocations.Add(8, APiecePawn::StaticClass());
-	//InitialPiecesLocations.Add(9, APiecePawn::StaticClass());
-	//InitialPiecesLocations.Add(10, APiecePawn::StaticClass());
-	//InitialPiecesLocations.Add(11, APiecePawn::StaticClass());
-	//InitialPiecesLocations.Add(12, APiecePawn::StaticClass());
-	//InitialPiecesLocations.Add(13, APiecePawn::StaticClass());
-	//InitialPiecesLocations.Add(14, APiecePawn::StaticClass());
-	//InitialPiecesLocations.Add(15, APiecePawn::StaticClass());
 }
 
 void AChessBoard::PrepareGameBoard()
@@ -160,6 +143,7 @@ void AChessBoard::CreatePieces()
 		{
 			const FPieceInfo PieceInfo = HumanFormatToPieceInfo(SP);
 			AChessBoardCell* Cell = GetCellByAddress(PieceInfo.CellAddress);
+
 			if (PieceInfo.TeamId > 0 && PieceInfo.PieceClass && Cell)
 			{
 				APieceBase* Piece;
@@ -183,7 +167,7 @@ void AChessBoard::CreatePieces()
 				}
 
 				//Team2
-				if (PieceInfo.TeamId == 1)
+				if (PieceInfo.TeamId == 2)
 				{
 					Piece = GetWorld()->SpawnActor<APieceBase>(PieceInfo.PieceClass, Cell->GetActorTransform(), SpawnInfo);
 					Piece->SetTeam(PieceInfo.TeamId);
@@ -199,40 +183,6 @@ void AChessBoard::CreatePieces()
 				}
 			}
 		}
-
-		//for (auto& Entry : InitialPiecesLocations)
-		//{
-		//	if (Entry.Key <= GameCells.Num())
-		//	{
-		//		APieceBase* Piece;
-		//		FActorSpawnParameters SpawnInfo;
-		//		SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		//		//Team1
-		//		int32 Index = Entry.Key;
-		//		Piece = GetWorld()->SpawnActor<APieceBase>(Entry.Value, GameCells[Index]->GetActorTransform(), SpawnInfo);
-		//		Piece->SetTeam(1);
-		//		Piece->GameBoard = this;
-		//		Piece->CellAddress = GameCells[Index]->CellAddress;
-		//		Team1ActivePieces.Add(Piece);
-		//		if (Piece->GetClass() == APieceKing::StaticClass())
-		//		{
-		//			King1 = Piece;
-		//		}
-
-		//		//Team2
-		//		Index = GameCells.Num() - 1 - Entry.Key;
-		//		Piece = GetWorld()->SpawnActor<APieceBase>(Entry.Value, GameCells[Index]->GetActorTransform(), SpawnInfo);
-		//		Piece->SetTeam(2);
-		//		Piece->GameBoard = this;
-		//		Piece->CellAddress = GameCells[Index]->CellAddress;
-		//		Team2ActivePieces.Add(Piece);
-		//		if (Piece->GetClass() == APieceKing::StaticClass())
-		//		{
-		//			King2 = Piece;
-		//		}
-		//	}
-		//}
 	}
 }
 
@@ -321,9 +271,6 @@ void AChessBoard::MovePiece(APieceBase* Piece, FIntPoint Address)
 		AChessBoardCell* NextCell = GetCellByAddress(Address);
 		if (PieceCell && NextCell)
 		{
-			//const FString Log = CellAddressToHumanFormat(Piece->CellAddress) + TEXT(" -> ") + CellAddressToHumanFormat(Address);
-			//UE_LOG(LogTemp, Warning, TEXT("Team %d %s %s"), Piece->GetTeamIndex(), *Piece->FriendlyName, *Log);
-
 			APieceBase* OtherPiece = GetPieceByAddress(Address);
 			if (OtherPiece)
 			{
@@ -559,7 +506,6 @@ APieceBase* AChessBoard::GetPieceByAddress(FIntPoint Address)
 FString AChessBoard::CellAddressToHumanFormat(FIntPoint& Address)
 {
 	FString Result;
-
 	switch (Address.X)
 	{
 	case 0: Result += TEXT("a"); break;
@@ -596,7 +542,7 @@ FIntPoint AChessBoard::HumanFormatToCellAddress(FString& Info)
 		default: AddressX = -1;
 		}
 
-		const int32 AddressY = InfoLower[1] - 1;
+		const int32 AddressY = (InfoLower[1] - '0') - 1;
 		return FIntPoint(AddressX, AddressY);
 	}
 	else
@@ -610,17 +556,11 @@ FPieceInfo AChessBoard::HumanFormatToPieceInfo(FString& Info)
 	const FString InfoLower = Info.ToLower();
 
 	// TeamId
-	int32 TeamId = 0;
-	TeamId = InfoLower[0] == 1 ? 1 : TeamId;
-	TeamId = InfoLower[0] == 2 ? 2 : TeamId;
+	const int32 TeamId = InfoLower[0] - '0';
 
-	TCHAR PieceChar = '0';
-	if (Info.Len() == 3)
-	{
-		// Pawn address
-		PieceChar = 'p';
-	}
-	else if (Info.Len() == 4)
+	// Pawn address by default
+	TCHAR PieceChar = 'p';
+	if (Info.Len() == 4)
 	{
 		// Non-pawn address
 		PieceChar = InfoLower[1];
@@ -640,7 +580,7 @@ FPieceInfo AChessBoard::HumanFormatToPieceInfo(FString& Info)
 	}
 
 	FString Address;
-	for (int32 i = InfoLower.Len() - 1; i > InfoLower.Len() - 3; i--)
+	for (int32 i = InfoLower.Len() - 2; i < InfoLower.Len(); i++)
 	{
 		Address.AppendChar(InfoLower[i]);
 	}

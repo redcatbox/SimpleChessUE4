@@ -40,9 +40,6 @@ public:
 	UFUNCTION()
 		void SetTeam(int32 TeamId);
 
-	UPROPERTY()
-		FString FriendlyName;
-
 	/** Is Piece ever moved? */
 	UPROPERTY()
 		bool bIsMoved;

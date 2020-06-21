@@ -44,14 +44,14 @@ public:
 
 	/** Create chess board */
 	void PrepareGameBoard();
-	
+
 	/** Evaluate with game rules */
 	void EvaluateGame();
-	
+
 	/** OnGameContinue event */
 	UPROPERTY()
 		FOnGameContinue OnGameContinue;
-	
+
 	/** OnGameFinished event */
 	UPROPERTY()
 		FOnGameFinished OnGameFinished;
@@ -72,19 +72,19 @@ public:
 	FORCEINLINE TArray<APieceBase*> GetTeam2ActivePieces() const { return Team2ActivePieces; }
 	FORCEINLINE TArray<APieceBase*> GetTeam1BeatenPieces() const { return Team1BeatenPieces; }
 	FORCEINLINE TArray<APieceBase*> GetTeam2BeatenPieces() const { return Team2BeatenPieces; }
-	
+
 	UFUNCTION()
 		void MovePiece(APieceBase* Piece, FIntPoint Address);
 
 	/** Calculate available moves of Pieces */
 	TArray<FMoveInfo> CalculatePiecesMoves();
-	
+
 	AChessBoardCell* GetCellByAddress(FIntPoint Address);
 	APieceBase* GetPieceByAddress(FIntPoint Address);
 
 	/** Cleanup game board */
 	void Cleanup();
-	
+
 protected:
 	UPROPERTY()
 		TArray<AChessBoardCell*> GameCells;
@@ -121,7 +121,7 @@ protected:
 
 	/** Convert 1/2, K/Q/R/B/N/(P) and A-H 1-8 format to piece info */
 	static FPieceInfo HumanFormatToPieceInfo(FString& Info);
-	
+
 	UPROPERTY()
 		APieceBase* King1;
 
@@ -129,9 +129,7 @@ protected:
 		APieceBase* King2;
 
 private:
-	//UPROPERTY()
-	//	TMap<int32, TSubclassOf<class APieceBase>> InitialPiecesLocations;
-
+	/** Starting positions of figures */
 	UPROPERTY()
 		TArray<FString> StartingPositions;
 };

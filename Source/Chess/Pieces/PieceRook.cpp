@@ -5,8 +5,6 @@
 
 APieceRook::APieceRook()
 {
-	FriendlyName = TEXT("Rook");
-
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SMObj(TEXT("/Game/Pieces/SM_Cylinder_01.SM_Cylinder_01"));
 	if (SMObj.Object)
 	{

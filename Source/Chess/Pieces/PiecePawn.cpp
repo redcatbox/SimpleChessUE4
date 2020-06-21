@@ -8,8 +8,6 @@
 
 APiecePawn::APiecePawn()
 {
-	FriendlyName = TEXT("Pawn");
-
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SMObj(TEXT("/Game/Pieces/SM_Cube_01.SM_Cube_01"));
 	if (SMObj.Object)
 	{
