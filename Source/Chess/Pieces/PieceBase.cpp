@@ -40,6 +40,7 @@ APieceBase::APieceBase()
 
 	bMovePiece = false;
 	Alpha = 0.f;
+	bNotifyMoveAnimFinished = false;
 }
 
 void APieceBase::SetTeam(int32 TeamId)
@@ -100,16 +101,21 @@ void APieceBase::Tick(float DeltaSeconds)
 		{
 			Alpha = 0.f;
 			bMovePiece = false;
-			OnPieceMoveAnimFinished.Broadcast();
+			
+			if (bNotifyMoveAnimFinished)
+			{
+				OnPieceMoveAnimFinished.Broadcast();
+			}
 		}
 	}
 }
 
-void APieceBase::PlayMovePieceAnim(FVector LocFrom, FVector LocTo)
+void APieceBase::PlayMovePieceAnim(FVector LocFrom, FVector LocTo, bool bNotifyWhenFinished)
 {
 	bMovePiece = true;
 	MoveFrom = LocFrom;
 	MoveTo = LocTo;
+	bNotifyMoveAnimFinished = bNotifyWhenFinished;
 }
 
 int32 APieceBase::GetPieceValue()

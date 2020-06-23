@@ -83,8 +83,6 @@ void AChessPlayer::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 
 void AChessPlayer::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location) {}
 
-
-
 void AChessPlayer::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -205,7 +203,7 @@ void AChessPlayer::UpdateCellsToHighlight()
 {
 	CellsToHighlight.Empty();
 
-	for (auto& Piece : GameBoard->GetTeam1ActivePieces())
+	for (auto& Piece : GameBoard->GetTeamActivePieces(1))
 	{
 		AChessBoardCell* Cell = GameBoard->GetCellByAddress(Piece->CellAddress);
 		if (Cell)

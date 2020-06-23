@@ -68,10 +68,8 @@ protected:
 
 public:
 	FORCEINLINE TArray<AChessBoardCell*> GetCells() const { return GameCells; };
-	FORCEINLINE TArray<APieceBase*> GetTeam1ActivePieces() const { return Team1ActivePieces; }
-	FORCEINLINE TArray<APieceBase*> GetTeam2ActivePieces() const { return Team2ActivePieces; }
-	FORCEINLINE TArray<APieceBase*> GetTeam1BeatenPieces() const { return Team1BeatenPieces; }
-	FORCEINLINE TArray<APieceBase*> GetTeam2BeatenPieces() const { return Team2BeatenPieces; }
+	TArray<APieceBase*> GetTeamActivePieces(int32 TeamId) const;
+	TArray<APieceBase*> GetTeamBeatenPieces(int32 TeamId) const;
 
 	UFUNCTION()
 		void MovePiece(APieceBase* Piece, FIntPoint Address);
@@ -110,17 +108,23 @@ protected:
 	/** Sets piece beaten and moves it to beaten cells */
 	void SetPieceBeaten(APieceBase* Piece);
 
+	/** Sets piece active and moves it to beaten cells */
+	void SetPieceActive(APieceBase* Piece);
+	
 	/** Swaps pieces on provided cells */
-	void SwapPiecesOnCells(AChessBoardCell* FirstCell, AChessBoardCell* SecondCell);
+	void SwapPieces(APieceBase* FirstPiece, APieceBase* SecondPiece);
 
 	/** Convert CellAddress to A-H 1-8 format */
-	static FString CellAddressToHumanFormat(FIntPoint& Address);
+	static FString CellAddressToChessNotation(FIntPoint& Address);
 
 	/** Convert A-H 1-8 format to CellAddress */
-	static FIntPoint HumanFormatToCellAddress(FString& Info);
+	static FIntPoint ChessNotationToCellAddress(FString& Info);
 
-	/** Convert 1/2, K/Q/R/B/N/(P) and A-H 1-8 format to piece info */
-	static FPieceInfo HumanFormatToPieceInfo(FString& Info);
+	/** Convert team 1/2, piece K/Q/R/B/N/(P) and A-H 1-8 address to piece info */
+	static FPieceInfo ChessNotationToPieceInfo(FString& Info);
+
+	/** Convert piece info to team 1/2, piece K/Q/R/B/N/(P) and A-H 1-8 address */
+	static FString PieceInfoToChessNotation(FPieceInfo Info);
 
 	UPROPERTY()
 		APieceBase* King1;

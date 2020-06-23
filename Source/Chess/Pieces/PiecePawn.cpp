@@ -40,3 +40,32 @@ APiecePawn::APiecePawn()
 	LegalMoves.Add(Move3);
 	LegalMoves.Add(Move4);
 }
+
+void APiecePawn::PromotePawn()
+{
+	TArray<APieceBase*> BeatenPieces;
+
+	if (TeamIndex == 1)
+	{
+		BeatenPieces = GameBoard->GetTeamBeatenPieces(1);
+	}
+	else if (TeamIndex == 2)
+	{
+		BeatenPieces = GameBoard->GetTeamBeatenPieces(2);
+	}
+
+	TArray<APieceBase*> PiecesToSelect;
+	
+	for (auto& BP : BeatenPieces)
+	{
+		if (BP->GetClass() != APiecePawn::StaticClass())
+		{
+			PiecesToSelect.Add(BP);
+		}
+	}
+
+	if (PiecesToSelect.Num() > 0)
+	{
+		//GameBoard->SwapPieces
+	}
+}

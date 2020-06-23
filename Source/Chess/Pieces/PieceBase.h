@@ -82,7 +82,7 @@ public:
 
 	/** Animation of Piece movement */
 	UFUNCTION()
-		void PlayMovePieceAnim(FVector LocFrom, FVector LocTo);
+		void PlayMovePieceAnim(FVector LocFrom, FVector LocTo, bool bNotifyFinished = true);
 
 	/** OnPieceMoveAnimFinished event */
 	UPROPERTY()
@@ -101,5 +101,8 @@ protected:
 
 	UPROPERTY()
 		FVector MoveTo;
+
+	UPROPERTY()
+		bool bNotifyMoveAnimFinished;
 	// Variables for tick-handled movement animation
 };

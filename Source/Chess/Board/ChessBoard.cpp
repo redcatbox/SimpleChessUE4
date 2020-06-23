@@ -141,7 +141,7 @@ void AChessBoard::CreatePieces()
 	{
 		for (auto& SP : StartingPositions)
 		{
-			const FPieceInfo PieceInfo = HumanFormatToPieceInfo(SP);
+			const FPieceInfo PieceInfo = ChessNotationToPieceInfo(SP);
 			AChessBoardCell* Cell = GetCellByAddress(PieceInfo.CellAddress);
 
 			if (PieceInfo.TeamId > 0 && PieceInfo.PieceClass && Cell)
@@ -246,20 +246,6 @@ void AChessBoard::Cleanup()
 	Team2BeatenPieces.Empty();
 }
 
-void AChessBoard::SwapPiecesOnCells(AChessBoardCell* FirstCell, AChessBoardCell* SecondCell)
-{
-	//APieceBase* F1 = GetPieceByAddress(GameCells[FirstCellId]->CellAddress);
-	//APieceBase* F2 = GetPieceByAddress(GameCells[SecondCellId]->CellAddress);
-
-	//if (F1 && F2)
-	//{
-	//	F1->CellAddress = GameCells[SecondCellId]->CellAddress;
-	//	F1->SetActorLocation(GameCells[SecondCellId]->GetActorLocation());
-	//	F2->CellAddress = GameCells[FirstCellId]->CellAddress;
-	//	F2->SetActorLocation(GameCells[FirstCellId]->GetActorLocation());
-	//}
-}
-
 void AChessBoard::MovePiece(APieceBase* Piece, FIntPoint Address)
 {
 	if (Piece)
@@ -301,12 +287,12 @@ void AChessBoard::SetPieceBeaten(APieceBase* Piece)
 			if (!GetPieceByAddress(CellsBeaten1[i]->CellAddress))
 			{
 				Piece->CellAddress = CellsBeaten1[i]->CellAddress;
-				Piece->PlayMovePieceAnim(Piece->GetActorLocation(), CellsBeaten1[i]->GetActorLocation());
+				Piece->PlayMovePieceAnim(Piece->GetActorLocation(), CellsBeaten1[i]->GetActorLocation(), false);
 				break;
 			}
 		}
 	}
-	else
+	else if (Piece->GetTeamIndex() == 2)
 	{
 		Team2ActivePieces.RemoveSwap(Piece);
 		Team2BeatenPieces.Add(Piece);
@@ -316,10 +302,39 @@ void AChessBoard::SetPieceBeaten(APieceBase* Piece)
 			if (!GetPieceByAddress(CellsBeaten2[i]->CellAddress))
 			{
 				Piece->CellAddress = CellsBeaten2[i]->CellAddress;
-				Piece->PlayMovePieceAnim(Piece->GetActorLocation(), CellsBeaten2[i]->GetActorLocation());
+				Piece->PlayMovePieceAnim(Piece->GetActorLocation(), CellsBeaten2[i]->GetActorLocation(), false);
 				break;
 			}
 		}
+	}
+}
+
+void AChessBoard::SetPieceActive(APieceBase* Piece)
+{
+	Piece->bIsBeaten = false;
+
+	if (Piece->GetTeamIndex() == 1)
+	{
+		Team1ActivePieces.Add(Piece);
+		Team1BeatenPieces.RemoveSwap(Piece);
+	}
+	else if (Piece->GetTeamIndex() == 2)
+	{
+		Team2ActivePieces.Add(Piece);
+		Team2BeatenPieces.RemoveSwap(Piece);
+	}
+}
+
+void AChessBoard::SwapPieces(APieceBase* FirstPiece, APieceBase* SecondPiece)
+{
+	if (FirstPiece && SecondPiece)
+	{
+		const FIntPoint Tmp = FirstPiece->CellAddress;
+		FirstPiece->CellAddress = SecondPiece->CellAddress;
+		SecondPiece->CellAddress = Tmp;
+
+		FirstPiece->PlayMovePieceAnim(FirstPiece->GetActorLocation(), SecondPiece->GetActorLocation(), false);
+		SecondPiece->PlayMovePieceAnim(SecondPiece->GetActorLocation(), FirstPiece->GetActorLocation());
 	}
 }
 
@@ -446,6 +461,38 @@ void AChessBoard::EvaluateGame()
 	OnGameContinue.Broadcast();
 }
 
+TArray<APieceBase*> AChessBoard::GetTeamActivePieces(int32 TeamId) const
+{
+	TArray<APieceBase*> Result;
+	
+	if (TeamId == 1)
+	{
+		Result = Team1ActivePieces;
+	}
+	else if (TeamId == 2)
+	{
+		Result = Team2ActivePieces;
+	}
+
+	return Result;
+}
+
+TArray<APieceBase*> AChessBoard::GetTeamBeatenPieces(int32 TeamId) const
+{
+	TArray<APieceBase*> Result;
+
+	if (TeamId == 1)
+	{
+		Result = Team1BeatenPieces;
+	}
+	else if (TeamId == 2)
+	{
+		Result = Team2BeatenPieces;
+	}
+
+	return Result;
+}
+
 AChessBoardCell* AChessBoard::GetCellByAddress(FIntPoint Address)
 {
 	const bool bAddressInBoardLimits =
@@ -503,7 +550,7 @@ APieceBase* AChessBoard::GetPieceByAddress(FIntPoint Address)
 	return nullptr;
 }
 
-FString AChessBoard::CellAddressToHumanFormat(FIntPoint& Address)
+FString AChessBoard::CellAddressToChessNotation(FIntPoint& Address)
 {
 	FString Result;
 	switch (Address.X)
@@ -523,7 +570,7 @@ FString AChessBoard::CellAddressToHumanFormat(FIntPoint& Address)
 	return Result;
 }
 
-FIntPoint AChessBoard::HumanFormatToCellAddress(FString& Info)
+FIntPoint AChessBoard::ChessNotationToCellAddress(FString& Info)
 {
 	if (Info.Len() == 2)
 	{
@@ -545,13 +592,11 @@ FIntPoint AChessBoard::HumanFormatToCellAddress(FString& Info)
 		const int32 AddressY = (InfoLower[1] - '0') - 1;
 		return FIntPoint(AddressX, AddressY);
 	}
-	else
-	{
-		return FIntPoint(-1, -1);
-	}
+
+	return FIntPoint(-1, -1);
 }
 
-FPieceInfo AChessBoard::HumanFormatToPieceInfo(FString& Info)
+FPieceInfo AChessBoard::ChessNotationToPieceInfo(FString& Info)
 {
 	const FString InfoLower = Info.ToLower();
 
@@ -585,7 +630,40 @@ FPieceInfo AChessBoard::HumanFormatToPieceInfo(FString& Info)
 		Address.AppendChar(InfoLower[i]);
 	}
 
-	const FIntPoint CellAddress = HumanFormatToCellAddress(Address);
+	const FIntPoint CellAddress = ChessNotationToCellAddress(Address);
 
 	return FPieceInfo(TeamId, PieceClass, CellAddress);
+}
+
+FString AChessBoard::PieceInfoToChessNotation(FPieceInfo Info)
+{
+	// TeamId
+	FString Result = FString::FromInt(Info.TeamId);
+
+	// Piece class
+	if (Info.PieceClass == APieceKing::StaticClass())
+	{
+		Result.AppendChar('K');
+	}
+	else if (Info.PieceClass == APieceQueen::StaticClass())
+	{
+		Result.AppendChar('Q');
+	}
+	else if (Info.PieceClass == APieceRook::StaticClass())
+	{
+		Result.AppendChar('R');
+	}
+	else if (Info.PieceClass == APieceBishop::StaticClass())
+	{
+		Result.AppendChar('B');
+	}
+	else if (Info.PieceClass == APieceKnight::StaticClass())
+	{
+		Result.AppendChar('N');
+	}
+
+	FString Address = CellAddressToChessNotation(Info.CellAddress);
+	Result.Append(Address);
+
+	return Result;
 }

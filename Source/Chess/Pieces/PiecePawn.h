@@ -12,7 +12,8 @@ class APiecePawn : public APieceBase
 
 public:
 	APiecePawn();
-	
-	//UFUNCTION()
-	//	void PromotePawn();
+
+	/** Check is there are beaten pieces from this team and promote pawn */
+	UFUNCTION()
+		void PromotePawn();
 };
