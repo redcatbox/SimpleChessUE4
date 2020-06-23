@@ -392,6 +392,13 @@ void AChessBoard::EvaluateGame()
 	//Stalemate
 
 
+	//Check
+
+	
+	
+	//Check
+	
+	
 	//Checkmate 1
 	if (King1->bIsBeaten)
 	{
@@ -635,7 +642,7 @@ FPieceInfo AChessBoard::ChessNotationToPieceInfo(FString& Info)
 	return FPieceInfo(TeamId, PieceClass, CellAddress);
 }
 
-FString AChessBoard::PieceInfoToChessNotation(FPieceInfo Info)
+FString AChessBoard::PieceInfoToChessNotation(FPieceInfo& Info)
 {
 	// TeamId
 	FString Result = FString::FromInt(Info.TeamId);

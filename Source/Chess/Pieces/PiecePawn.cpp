@@ -63,9 +63,4 @@ void APiecePawn::PromotePawn()
 			PiecesToSelect.Add(BP);
 		}
 	}
-
-	if (PiecesToSelect.Num() > 0)
-	{
-		//GameBoard->SwapPieces
-	}
 }

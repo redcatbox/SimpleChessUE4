@@ -2,6 +2,7 @@
 
 #include "PieceKing.h"
 #include "MoveRegular.h"
+#include "MoveCastling.h"
 
 APieceKing::APieceKing()
 {
@@ -11,7 +12,7 @@ APieceKing::APieceKing()
 		StaticMeshComponent->SetStaticMesh(SMObj.Object);
 	}
 
-	// Define legal moves
+	// Regular moves
 	const FIntPoint Move1Dir = FIntPoint(1, 0);
 	const FIntPoint Move2Dir = FIntPoint(-1, 0);
 	const FIntPoint Move3Dir = FIntPoint(0, 1);
@@ -54,6 +55,22 @@ APieceKing::APieceKing()
 	Move8->Direction = Move8Dir;
 	Move8->MaxSteps = MoveMaxSteps;
 
+	//Castling
+	const FIntPoint Castling1Dir = FIntPoint(1, 0);
+	const int32 Castling1MaxSteps = 3;
+	const FIntPoint Castling2Dir = FIntPoint(-1, 0);
+	const int32 Castling2MaxSteps = 4;
+
+	UMoveCastling* Castling1 = NewObject<UMoveCastling>();
+	Castling1->CastlingType = ECastlingType::ECT_KingSide;
+	Castling1->Direction = Castling1Dir;
+	Castling1->MaxSteps = Castling1MaxSteps;
+
+	UMoveCastling* Castling2 = NewObject<UMoveCastling>();
+	Castling2->CastlingType = ECastlingType::ECT_QueenSide;
+	Castling2->Direction = Castling2Dir;
+	Castling2->MaxSteps = Castling2MaxSteps;
+
 	LegalMoves.Add(Move1);
 	LegalMoves.Add(Move2);
 	LegalMoves.Add(Move3);
@@ -62,7 +79,6 @@ APieceKing::APieceKing()
 	LegalMoves.Add(Move6);
 	LegalMoves.Add(Move7);
 	LegalMoves.Add(Move8);
-
-	//Castling
-	//Mirror for second team
+	LegalMoves.Add(Castling1);
+	LegalMoves.Add(Castling2);
 }

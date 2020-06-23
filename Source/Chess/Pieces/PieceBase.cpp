@@ -57,9 +57,9 @@ void APieceBase::SetMaterialByTeam(int32 TeamId)
 	}
 }
 
-bool APieceBase::CheckIsCellReachable(FIntPoint Cell)
+bool APieceBase::CheckIsCellReachable(FIntPoint& Address)
 {
-	if (CellsAvailableToMove.Contains(Cell))
+	if (CellsAvailableToMove.Contains(CellAddress))
 	{
 		return true;
 	}

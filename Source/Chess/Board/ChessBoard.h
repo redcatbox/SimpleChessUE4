@@ -124,7 +124,7 @@ protected:
 	static FPieceInfo ChessNotationToPieceInfo(FString& Info);
 
 	/** Convert piece info to team 1/2, piece K/Q/R/B/N/(P) and A-H 1-8 address */
-	static FString PieceInfoToChessNotation(FPieceInfo Info);
+	static FString PieceInfoToChessNotation(FPieceInfo& Info);
 
 	UPROPERTY()
 		APieceBase* King1;

@@ -64,7 +64,7 @@ public:
 	
 	/** Check is provided cell can be reached by available moves */
 	UFUNCTION()
-		virtual bool CheckIsCellReachable(FIntPoint Cell);
+		virtual bool CheckIsCellReachable(FIntPoint& Address);
 
 	/** Returns all moves results */
 	UFUNCTION()
