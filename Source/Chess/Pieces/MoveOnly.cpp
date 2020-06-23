@@ -5,9 +5,9 @@
 #include "Chess/Board/ChessBoardCell.h"
 #include "Chess/Board/ChessBoard.h"
 
-TArray<FMoveInfo> UMoveOnly::CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress)
+TArray<UMoveInfo*> UMoveOnly::CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress)
 {
-	TArray<FMoveInfo> Result;
+	TArray<UMoveInfo*> Result;
 
 	if (Piece)
 	{
@@ -30,7 +30,10 @@ TArray<FMoveInfo> UMoveOnly::CalculateMoveInfos(APieceBase* Piece, FIntPoint Cel
 				}
 				else
 				{
-					FMoveInfo MoveInfo = FMoveInfo(0, NewAddress, Piece);
+					UMoveInfo* MoveInfo = NewObject<UMoveInfo>();
+					MoveInfo->Value = 0;
+					MoveInfo->CellAddress = NewAddress;
+					MoveInfo->Piece = Piece;
 					Result.Add(MoveInfo);
 				}
 			}

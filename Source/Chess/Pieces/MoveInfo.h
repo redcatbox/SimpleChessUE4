@@ -8,11 +8,13 @@
 class AChessBoardCell;
 class APieceBase;
 
-USTRUCT()
-struct FMoveInfo
+/**	Piece move result info */
+UCLASS()
+class CHESS_API UMoveInfo : public UObject
 {
 	GENERATED_BODY()
 
+public:
 	UPROPERTY()
 		int32 Value;
 
@@ -21,33 +23,4 @@ struct FMoveInfo
 
 	UPROPERTY()
 		APieceBase* Piece;
-
-	FMoveInfo()
-	{
-		this->Value = 0;
-		this->CellAddress = FIntPoint(-1, -1);
-		this->Piece = nullptr;
-	}
-
-	FMoveInfo(int32 Value, FIntPoint CellAddress, APieceBase* Piece)
-	{
-		this->Value = Value;
-		this->CellAddress = CellAddress;
-		this->Piece = Piece;
-	}
-	
-	FORCEINLINE bool operator==(const FMoveInfo &Other) const
-	{
-		return Value == Other.Value;
-	}
-
-	FORCEINLINE bool operator<=(const FMoveInfo &Other) const
-	{
-		return Value <= Other.Value;
-	}
-
-	FORCEINLINE bool operator>=(const FMoveInfo &Other) const
-	{
-		return Value >= Other.Value;
-	}
 };

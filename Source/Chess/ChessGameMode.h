@@ -7,7 +7,7 @@
 
 class AChessPlayerBase;
 
-/** GameMode class to specify pawn, playercontroller, hud and more */
+/** GameMode class to specify pawn, player controller, hud and more */
 UCLASS()
 class CHESS_API AChessGameMode : public AGameModeBase
 {

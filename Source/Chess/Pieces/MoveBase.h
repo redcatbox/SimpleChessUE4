@@ -9,7 +9,7 @@
 class AChessBoardCell;
 class APieceBase;
 
-/**	Base abstract class for Piece move */
+/**	Base abstract class for piece move */
 UCLASS(Abstract)
 class CHESS_API UMoveBase : public UObject
 {
@@ -18,5 +18,5 @@ class CHESS_API UMoveBase : public UObject
 public:
 	/** Calculates array of move results with move values and cells */
 	UFUNCTION()
-		virtual TArray<FMoveInfo> CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress);
+		virtual TArray<UMoveInfo*> CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress);
 };

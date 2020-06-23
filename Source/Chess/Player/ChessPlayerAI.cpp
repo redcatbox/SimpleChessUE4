@@ -9,24 +9,23 @@ void AChessPlayerAI::TriggerForMakeMove(bool bCondition)
 
 	if (bCondition)
 	{
-		FMoveInfo Move = Search(0, true);
-
-		if (Move.Piece)
+		UMoveInfo* MoveInfo = Search(0, true);
+		if (MoveInfo)
 		{
-			MakeMove(Move);
+			MakeMove(MoveInfo);
 		}
 	}
 }
 
-FMoveInfo AChessPlayerAI::Search(int32 Depth, bool bMax)
+UMoveInfo* AChessPlayerAI::Search(int32 Depth, bool bMax)
 {
 	if (Depth == 0)
 	{
 		return CalculateBestMove();
 	}
 
-	TArray<FMoveInfo> MoveInfos = GameBoard->CalculatePiecesMoves();
-	FMoveInfo Result;
+	TArray<UMoveInfo*> MoveInfos = GameBoard->CalculatePiecesMoves();
+	UMoveInfo* Result = nullptr;
 
 	//if (bMax)
 	//{
@@ -50,34 +49,41 @@ FMoveInfo AChessPlayerAI::Search(int32 Depth, bool bMax)
 	return Result;
 }
 
-FMoveInfo AChessPlayerAI::CalculateBestMove()
+UMoveInfo* AChessPlayerAI::CalculateBestMove()
 {
-	TArray<FMoveInfo> AllMoves = GameBoard->CalculatePiecesMoves();
-	TArray<FMoveInfo> TeamMoves;
+	TArray<UMoveInfo*> AllMoves = GameBoard->CalculatePiecesMoves();
+	TArray<UMoveInfo*> TeamMoves;
 
 	for (auto& MI : AllMoves)
 	{
-		if (MI.Piece->GetTeamIndex() == TeamIndex)
+		if (MI->Piece->GetTeamIndex() == TeamIndex)
 		{
 			TeamMoves.Add(MI);
 		}
 	}
 
 	// Process all move results and find best result
-	FMoveInfo BestMoveInfo;
+	UMoveInfo* BestMoveInfo = nullptr;
 	for (auto& MI : TeamMoves)
 	{
-		if (BestMoveInfo <= MI)
+		if (BestMoveInfo)
+		{
+			if (BestMoveInfo->Value <= MI->Value)
+			{
+				BestMoveInfo = MI;
+			}
+		}
+		else
 		{
 			BestMoveInfo = MI;
 		}
 	}
 
 	// Check is there are similar results
-	TArray<FMoveInfo> SimilarResults;
+	TArray<UMoveInfo*> SimilarResults;
 	for (auto& MI : TeamMoves)
 	{
-		if (BestMoveInfo == MI)
+		if (BestMoveInfo->Value == MI->Value)
 		{
 			SimilarResults.Add(MI);
 		}
@@ -89,11 +95,6 @@ FMoveInfo AChessPlayerAI::CalculateBestMove()
 		const int32 Index = FMath::RandRange(0, SimilarResults.Num() - 1);
 		BestMoveInfo = SimilarResults[Index];
 	}
-
-	//if (BestMoveInfo.Piece)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("BestMoveInfo = %d"), BestMoveInfo.Value);
-	//}
 
 	return BestMoveInfo;
 }

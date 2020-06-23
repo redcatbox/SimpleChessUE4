@@ -4,9 +4,9 @@
 #include "PieceRook.h"
 #include "Chess/Board/ChessBoard.h"
 
-TArray<FMoveInfo> UMoveCastling::CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress)
+TArray<UMoveInfo*> UMoveCastling::CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress)
 {
-	TArray<FMoveInfo> Result;
+	TArray<UMoveInfo*> Result;
 
 	if (Piece)
 	{
@@ -17,24 +17,61 @@ TArray<FMoveInfo> UMoveCastling::CalculateMoveInfos(APieceBase* Piece, FIntPoint
 			{
 				if (AP->GetClass() == APieceRook::StaticClass() && !AP->bIsMoved)
 				{
-					const ECastlingType RookSide = AP->CellAddress.X > Piece->CellAddress.X
-						? ECastlingType::ECT_KingSide
-						: ECastlingType::ECT_QueenSide;
+					const bool bKingSide = AP->CellAddress.X > Piece->CellAddress.X
+						? true
+						: false;
 
-					if (CastlingType == RookSide)
+					if (bKingSide)
 					{
+						// King side castling
+						const FIntPoint Direction = FIntPoint(1, 0);
+						const int32 MaxSteps = 3;
+
 						for (int32 Step = 1; Step <= MaxSteps; Step++)
 						{
 							const FIntPoint NewAddress = CellAddress + Direction * Step;
 							APieceBase* OtherPiece = Piece->GameBoard->GetPieceByAddress(NewAddress);
-							if (OtherPiece == AP)
+							if (OtherPiece)
 							{
-								FMoveInfo MoveInfo = FMoveInfo(0, NewAddress, Piece);
-								Result.Add(MoveInfo);
+								if (OtherPiece == AP)
+								{
+									UMoveInfo* MoveInfo = NewObject<UMoveInfo>();
+									MoveInfo->Value = 0;
+									MoveInfo->CellAddress = NewAddress;
+									MoveInfo->Piece = Piece;
+									Result.Add(MoveInfo);
+								}
+								else
+								{
+									return Result;
+								}
 							}
-							else
+						}
+					}
+					else
+					{
+						// Queen side castling
+						const FIntPoint Direction = FIntPoint(-1, 0);
+						const int32 MaxSteps = 4;
+
+						for (int32 Step = 1; Step <= MaxSteps; Step++)
+						{
+							const FIntPoint NewAddress = CellAddress + Direction * Step;
+							APieceBase* OtherPiece = Piece->GameBoard->GetPieceByAddress(NewAddress);
+							if (OtherPiece)
 							{
-								return Result;
+								if (OtherPiece == AP)
+								{
+									UMoveInfo* MoveInfo = NewObject<UMoveInfo>();
+									MoveInfo->Value = 0;
+									MoveInfo->CellAddress = NewAddress;
+									MoveInfo->Piece = Piece;
+									Result.Add(MoveInfo);
+								}
+								else
+								{
+									return Result;
+								}
 							}
 						}
 					}

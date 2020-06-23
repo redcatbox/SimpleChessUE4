@@ -59,7 +59,7 @@ void APieceBase::SetMaterialByTeam(int32 TeamId)
 
 bool APieceBase::CheckIsCellReachable(FIntPoint& Address)
 {
-	if (CellsAvailableToMove.Contains(CellAddress))
+	if (CellsAvailableToMove.Contains(Address))
 	{
 		return true;
 	}
@@ -69,19 +69,21 @@ bool APieceBase::CheckIsCellReachable(FIntPoint& Address)
 
 void APieceBase::CalculateMovesResults()
 {
-	MoveInfos.Empty();
+	// Calculate moves
+	MoveInfos.Empty(); 
 
 	for (auto& Move : LegalMoves)
 	{
-		TArray<FMoveInfo> MI = Move->CalculateMoveInfos(this, CellAddress);
+		TArray<UMoveInfo*> MI = Move->CalculateMoveInfos(this, CellAddress);
 		MoveInfos.Append(MI);
 	}
 
+	// Get cells from calculated moves
 	CellsAvailableToMove.Empty();
 
 	for (auto& MI : MoveInfos)
 	{
-		CellsAvailableToMove.Add(MI.CellAddress);
+		CellsAvailableToMove.Add(MI->CellAddress);
 	}
 }
 

@@ -161,8 +161,11 @@ void AChessPlayer::TriggerClick()
 			{
 				if (SelectedPiece)
 				{
-					const FMoveInfo Move = FMoveInfo(0, CurrentCellFocus->CellAddress, SelectedPiece);
-					MakeMove(Move);
+					UMoveInfo* MoveInfo = NewObject<UMoveInfo>();
+					MoveInfo->Value = 0;
+					MoveInfo->CellAddress = CurrentCellFocus->CellAddress;
+					MoveInfo->Piece = SelectedPiece;
+					MakeMove(MoveInfo);
 				}
 			}
 		}
@@ -170,8 +173,11 @@ void AChessPlayer::TriggerClick()
 		{
 			if (SelectedPiece)
 			{
-				const FMoveInfo Move = FMoveInfo(0, CurrentCellFocus->CellAddress, SelectedPiece);
-				MakeMove(Move);
+				UMoveInfo* MoveInfo = NewObject<UMoveInfo>();
+				MoveInfo->Value = 0;
+				MoveInfo->CellAddress = CurrentCellFocus->CellAddress;
+				MoveInfo->Piece = SelectedPiece;
+				MakeMove(MoveInfo);
 			}
 		}
 	}
@@ -184,17 +190,17 @@ void AChessPlayer::TriggerForMakeMove(bool bCondition)
 	UpdateCellsToHighlight();
 }
 
-void AChessPlayer::MakeMove(FMoveInfo Move)
+void AChessPlayer::MakeMove(UMoveInfo* Move)
 {
-	if (SelectedPiece->CheckIsCellReachable(Move.CellAddress))
+	if (SelectedPiece->CheckIsCellReachable(Move->CellAddress))
 	{
-		if (Move.Piece)
+		if (Move->Piece)
 		{
 			bCanTraceForCells = false;
-			GameBoard->MovePiece(Move.Piece, Move.CellAddress);
+			GameBoard->MovePiece(Move->Piece, Move->CellAddress);
 			CurrentCellFocus->Highlight(false);
 			CurrentCellFocus = nullptr;
-			Move.Piece->OnPieceMoveAnimFinished.AddDynamic(this, &AChessPlayerBase::PerformMove);
+			Move->Piece->OnPieceMoveAnimFinished.AddDynamic(this, &AChessPlayerBase::PerformMove);
 		}
 	}
 }
@@ -234,8 +240,6 @@ void AChessPlayer::SelectPiece(APieceBase* Piece)
 			Cell->Select(true);
 			CellsToTurnOff.Add(Cell);
 		}
-
-		SelectedPiece->CalculateMovesResults();
 
 		for (auto& CA : SelectedPiece->CellsAvailableToMove)
 		{

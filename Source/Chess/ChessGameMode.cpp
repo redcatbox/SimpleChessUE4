@@ -64,9 +64,9 @@ void AChessGameMode::StartChessGame()
 	SpawnedActor = GetWorld()->SpawnActor(AChessPlayerAI::StaticClass(), &SpawnTransform, SpawnInfo);
 	Player2 = Cast<AChessPlayerAI>(SpawnedActor);
 	SetupChessPlayer(Player2, 2);
-	
+
 	bHasActiveGame = true;
-	GameContinue();
+	GameEvaluate();
 }
 
 void AChessGameMode::SetupChessPlayer(AChessPlayerBase* ChessPlayer, int32 TeamId)
@@ -114,9 +114,11 @@ void AChessGameMode::GameReset()
 			GameBoard = nullptr;
 		}
 
-		Player1->OnMovePerformed.RemoveDynamic(this, &AChessGameMode::GameEvaluate);
-		
-		Player1 = nullptr;
+		if (Player1)
+		{
+			Player1->OnMovePerformed.RemoveDynamic(this, &AChessGameMode::GameEvaluate);
+			Player1 = nullptr;
+		}
 
 		if (Player2)
 		{
@@ -138,7 +140,7 @@ void AChessGameMode::GameFinished(int32 WinTeamId, int32 WinCode)
 		if (AChessHUD* ChessHUD = Cast<AChessHUD>(PC->GetHUD()))
 		{
 			FString InfoText;
-			
+
 			if (WinCode == 0)
 			{
 				InfoText = TEXT("Checkmate! ") + FString::Printf(TEXT("Team %d wins!"), WinTeamId);

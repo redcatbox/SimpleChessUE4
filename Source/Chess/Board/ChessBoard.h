@@ -75,7 +75,7 @@ public:
 		void MovePiece(APieceBase* Piece, FIntPoint Address);
 
 	/** Calculate available moves of Pieces */
-	TArray<FMoveInfo> CalculatePiecesMoves();
+	TArray<UMoveInfo*> CalculatePiecesMoves();
 
 	AChessBoardCell* GetCellByAddress(FIntPoint Address);
 	APieceBase* GetPieceByAddress(FIntPoint Address);

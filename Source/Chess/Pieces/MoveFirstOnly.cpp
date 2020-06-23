@@ -3,9 +3,9 @@
 #include "MoveFirstOnly.h"
 #include "PieceBase.h"
 
-TArray<FMoveInfo> UMoveFirstOnly::CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress)
+TArray<UMoveInfo*> UMoveFirstOnly::CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress)
 {
-	TArray<FMoveInfo> Result;
+	TArray<UMoveInfo*> Result;
 
 	if (Piece)
 	{

@@ -16,7 +16,7 @@ public:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void TriggerForMakeMove(bool bCondition) override;
 	virtual void SelectPiece(APieceBase* Piece) override;
-	virtual void MakeMove(FMoveInfo Move) override;
+	virtual void MakeMove(UMoveInfo* Move) override;
 	virtual void Resign() override;
 	void AdjustCamera();
 

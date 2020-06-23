@@ -12,5 +12,5 @@ class CHESS_API UMoveFirstOnly : public UMoveOnly
 	GENERATED_BODY()
 
 public:
-	virtual TArray<FMoveInfo> CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress) override;
+	virtual TArray<UMoveInfo*> CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress) override;
 };

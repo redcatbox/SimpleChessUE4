@@ -15,7 +15,7 @@ class CHESS_API UMoveJump : public UMoveBase
 	GENERATED_BODY()
 
 public:
-	virtual TArray<FMoveInfo> CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress) override;
+	virtual TArray<UMoveInfo*> CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress) override;
 
 	UPROPERTY()
 		FIntPoint Move;

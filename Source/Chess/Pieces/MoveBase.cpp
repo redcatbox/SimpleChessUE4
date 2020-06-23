@@ -2,8 +2,8 @@
 
 #include "MoveBase.h"
 
-TArray<FMoveInfo> UMoveBase::CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress)
+TArray<UMoveInfo*> UMoveBase::CalculateMoveInfos(APieceBase* Piece, FIntPoint CellAddress)
 {
-	TArray<FMoveInfo> Result;
+	TArray<UMoveInfo*> Result;
 	return Result;
 }

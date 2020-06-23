@@ -338,9 +338,9 @@ void AChessBoard::SwapPieces(APieceBase* FirstPiece, APieceBase* SecondPiece)
 	}
 }
 
-TArray<FMoveInfo> AChessBoard::CalculatePiecesMoves()
+TArray<UMoveInfo*> AChessBoard::CalculatePiecesMoves()
 {
-	TArray<FMoveInfo> Result;
+	TArray<UMoveInfo*> Result;
 
 	for (auto& Piece : Team1ActivePieces)
 	{
@@ -359,18 +359,18 @@ TArray<FMoveInfo> AChessBoard::CalculatePiecesMoves()
 
 void AChessBoard::EvaluateGame()
 {
-	TArray<FMoveInfo> AllMoves = CalculatePiecesMoves();
-	TArray<FMoveInfo> Team1Moves;
-	TArray<FMoveInfo> Team2Moves;
+	TArray<UMoveInfo*> AllMoves = CalculatePiecesMoves();
+	TArray<UMoveInfo*> Team1Moves;
+	TArray<UMoveInfo*> Team2Moves;
 
 	for (auto& M : AllMoves)
 	{
-		if (M.Piece->GetTeamIndex() == 1)
+		if (M->Piece->GetTeamIndex() == 1)
 		{
 			Team1Moves.Add(M);
 		}
 
-		if (M.Piece->GetTeamIndex() == 2)
+		if (M->Piece->GetTeamIndex() == 2)
 		{
 			Team2Moves.Add(M);
 		}
@@ -394,11 +394,11 @@ void AChessBoard::EvaluateGame()
 
 	//Check
 
-	
-	
+
+
 	//Check
-	
-	
+
+
 	//Checkmate 1
 	if (King1->bIsBeaten)
 	{
@@ -417,7 +417,7 @@ void AChessBoard::EvaluateGame()
 	AChessBoardCell* King1Cell = GetCellByAddress(King1->CellAddress);
 	for (auto& M : Team2Moves)
 	{
-		if (GetCellByAddress(M.CellAddress) == King1Cell)
+		if (GetCellByAddress(M->CellAddress) == King1Cell)
 		{
 			bKing1IsUnderAttack = true;
 			break;
@@ -451,7 +451,7 @@ void AChessBoard::EvaluateGame()
 	AChessBoardCell* King2Cell = GetCellByAddress(King2->CellAddress);
 	for (auto& M : Team1Moves)
 	{
-		if (GetCellByAddress(M.CellAddress) == King2Cell)
+		if (GetCellByAddress(M->CellAddress) == King2Cell)
 		{
 			bKing2IsUnderAttack = true;
 			break;
@@ -471,7 +471,7 @@ void AChessBoard::EvaluateGame()
 TArray<APieceBase*> AChessBoard::GetTeamActivePieces(int32 TeamId) const
 {
 	TArray<APieceBase*> Result;
-	
+
 	if (TeamId == 1)
 	{
 		Result = Team1ActivePieces;
@@ -628,7 +628,7 @@ FPieceInfo AChessBoard::ChessNotationToPieceInfo(FString& Info)
 	case 'b': PieceClass = APieceBishop::StaticClass(); break;
 	case 'n': PieceClass = APieceKnight::StaticClass(); break;
 	case 'p': PieceClass = APiecePawn::StaticClass(); break;
-	default: PieceClass = NULL;
+	default: PieceClass = nullptr;
 	}
 
 	FString Address;

@@ -12,4 +12,5 @@ class APieceKing : public APieceBase
 
 public:
 	APieceKing();
+	void CalculateMovesResults() override;
 };

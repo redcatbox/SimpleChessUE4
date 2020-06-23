@@ -68,7 +68,7 @@ public:
 
 	/** Returns all moves results */
 	UFUNCTION()
-		void CalculateMovesResults();
+		virtual void CalculateMovesResults();
 	
 	/** Reference to cell that this Piece staying on */
 	UPROPERTY()
@@ -78,7 +78,7 @@ public:
 		TArray<FIntPoint> CellsAvailableToMove;
 
 	UPROPERTY()
-		TArray<FMoveInfo> MoveInfos;
+		TArray<UMoveInfo*> MoveInfos;
 
 	/** Animation of Piece movement */
 	UFUNCTION()

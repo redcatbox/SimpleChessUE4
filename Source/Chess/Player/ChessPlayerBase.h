@@ -50,7 +50,7 @@ public:
 	
 protected:
 	UFUNCTION()
-		virtual void MakeMove(FMoveInfo Move);
+		virtual void MakeMove(UMoveInfo* Move);
 
 	UPROPERTY()
 		APieceBase* SelectedPiece;

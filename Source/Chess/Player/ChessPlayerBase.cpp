@@ -71,19 +71,19 @@ void AChessPlayerBase::SelectCell(AChessBoardCell* Cell)
 	}
 }
 
-void AChessPlayerBase::MakeMove(FMoveInfo Move)
+void AChessPlayerBase::MakeMove(UMoveInfo* Move)
 {
-	if (Move.Piece)
+	if (Move->Piece)
 	{
-		SelectPiece(Move.Piece);
+		SelectPiece(Move->Piece);
 
-		AChessBoardCell* Cell = GameBoard->GetCellByAddress(Move.CellAddress);
+		AChessBoardCell* Cell = GameBoard->GetCellByAddress(Move->CellAddress);
 		if (Cell)
 		{
 			SelectCell(Cell);
 		}
 
-		GameBoard->MovePiece(Move.Piece, Move.CellAddress);
+		GameBoard->MovePiece(Move->Piece, Move->CellAddress);
 		SelectedPiece->OnPieceMoveAnimFinished.AddDynamic(this, &AChessPlayerBase::PerformMove);
 	}
 }

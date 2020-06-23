@@ -3,6 +3,7 @@
 #include "PieceKing.h"
 #include "MoveRegular.h"
 #include "MoveCastling.h"
+#include "Chess/Board/ChessBoard.h"
 
 APieceKing::APieceKing()
 {
@@ -56,20 +57,7 @@ APieceKing::APieceKing()
 	Move8->MaxSteps = MoveMaxSteps;
 
 	//Castling
-	const FIntPoint Castling1Dir = FIntPoint(1, 0);
-	const int32 Castling1MaxSteps = 3;
-	const FIntPoint Castling2Dir = FIntPoint(-1, 0);
-	const int32 Castling2MaxSteps = 4;
-
-	UMoveCastling* Castling1 = NewObject<UMoveCastling>();
-	Castling1->CastlingType = ECastlingType::ECT_KingSide;
-	Castling1->Direction = Castling1Dir;
-	Castling1->MaxSteps = Castling1MaxSteps;
-
-	UMoveCastling* Castling2 = NewObject<UMoveCastling>();
-	Castling2->CastlingType = ECastlingType::ECT_QueenSide;
-	Castling2->Direction = Castling2Dir;
-	Castling2->MaxSteps = Castling2MaxSteps;
+	UMoveCastling* Castling = NewObject<UMoveCastling>();
 
 	LegalMoves.Add(Move1);
 	LegalMoves.Add(Move2);
@@ -79,6 +67,61 @@ APieceKing::APieceKing()
 	LegalMoves.Add(Move6);
 	LegalMoves.Add(Move7);
 	LegalMoves.Add(Move8);
-	LegalMoves.Add(Castling1);
-	LegalMoves.Add(Castling2);
+	LegalMoves.Add(Castling);
+}
+
+void APieceKing::CalculateMovesResults()
+{
+	MoveInfos.Empty();
+
+	// Calculate moves
+	for (auto& Move : LegalMoves)
+	{
+		TArray<UMoveInfo*> MI = Move->CalculateMoveInfos(this, CellAddress);
+		MoveInfos.Append(MI);
+	}
+
+	// Get other team moves
+	TArray<APieceBase*> OtherTeamPieces;
+	if (TeamIndex == 1)
+	{
+		OtherTeamPieces.Append(GameBoard->GetTeamActivePieces(2));
+	}
+	else if (TeamIndex == 2)
+	{
+		OtherTeamPieces.Append(GameBoard->GetTeamActivePieces(2));
+	}
+
+	TArray<UMoveInfo*> OtherMoveInfos;
+	for (auto& OTP : OtherTeamPieces)
+	{
+		OtherMoveInfos.Append(OTP->MoveInfos);
+	}
+
+	// Search for "Check" moves
+	TArray<UMoveInfo*> MovesToRemove;
+	for (auto& MI : MoveInfos)
+	{
+		for (auto& OMI : OtherMoveInfos)
+		{
+			if (MI->CellAddress == OMI->CellAddress)
+			{
+				MovesToRemove.Add(MI);
+			}
+		}
+	}
+
+	// Remove "Check" moves
+	for (auto& Move : MovesToRemove)
+	{
+		MoveInfos.RemoveSwap(Move);
+	}
+
+	// Get cells from calculated moves
+	CellsAvailableToMove.Empty();
+
+	for (auto& MI : MoveInfos)
+	{
+		CellsAvailableToMove.Add(MI->CellAddress);
+	}
 }
