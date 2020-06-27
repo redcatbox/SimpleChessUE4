@@ -226,6 +226,14 @@
 		{
 			"Name": "ProceduralMeshComponent",
 			"Enabled": false
+		},
+		{
+			"Name": "MovieRenderPipeline",
+			"Enabled": false
+		},
+		{
+			"Name": "LevelSequenceEditor",
+			"Enabled": false
 		}
 	]
 }

@@ -2,9 +2,11 @@
 
 #include "ChessHUD.h"
 #include "ChessGameMode.h"
+#include "Kismet/GameplayStatics.h"
+#include "Chess/Player/ChessPlayer.h"
 
 void AChessHUD::ShowMenuMain()
-{
+{	
 	if (MenuMainClass)
 	{
 		MenuMainWidget = CreateWidget(GetOwningPlayerController(), MenuMainClass);
@@ -14,6 +16,11 @@ void AChessHUD::ShowMenuMain()
 
 void AChessHUD::HideMenuMain()
 {
+	if (AChessPlayer* ChessPlayer = Cast<AChessPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
+	{
+		ChessPlayer->AdjustCamera();
+	}
+	
 	if (MenuMainWidget)
 	{
 		MenuMainWidget->RemoveFromParent();
@@ -60,7 +67,7 @@ void AChessHUD::HideInfoScreen()
 
 void AChessHUD::StartGame()
 {
-	if (AChessGameMode* ChessGameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode()))
+	if (AChessGameMode* ChessGameMode = Cast<AChessGameMode>(UGameplayStatics::GetGameMode(GetWorld())))
 	{
 		if (ChessGameMode->bHasActiveGame)
 		{
@@ -77,9 +84,9 @@ void AChessHUD::ResetGame()
 {
 	HideInfoScreen();
 
-	if (AChessGameMode* ChessGameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode()))
+	if (AChessGameMode* ChessGameMode = Cast<AChessGameMode>(UGameplayStatics::GetGameMode(GetWorld())))
 	{
-		ChessGameMode->GameFinished();
+		ChessGameMode->GameReset();
 	}
 
 	ShowMenuMain();
@@ -94,7 +101,7 @@ void AChessHUD::FinishGame(FText InfoText)
 
 void AChessHUD::TogglePause()
 {
-	if (AChessGameMode* ChessGameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode()))
+	if (AChessGameMode* ChessGameMode = Cast<AChessGameMode>(UGameplayStatics::GetGameMode(GetWorld())))
 	{
 		if (ChessGameMode->TogglePause())
 		{

@@ -9,29 +9,28 @@ void AChessPlayerAI::TriggerForMakeMove(bool bCondition)
 
 	if (bCondition)
 	{
-		FMoveResult Move = Search(0, true);
-
-		if (Move.Figure)
+		UMoveInfo* MoveInfo = Search(0, true);
+		if (MoveInfo)
 		{
-			MakeMove(Move);
+			MakeMove(MoveInfo);
 		}
 	}
 }
 
-FMoveResult AChessPlayerAI::Search(int32 Depth, bool bMax)
+UMoveInfo* AChessPlayerAI::Search(int32 Depth, bool bMax)
 {
 	if (Depth == 0)
 	{
 		return CalculateBestMove();
 	}
 
-	TArray<FMoveResult> MoveResults = CalculateAvailableMoves();
-	FMoveResult Result;
+	TArray<UMoveInfo*> MoveInfos = GameBoard->CalculatePiecesMoves();
+	UMoveInfo* Result = nullptr;
 
 	//if (bMax)
 	//{
 	//	// Team 2
-	//	for (auto& MR : MoveResults)
+	//	for (auto& MI : MoveInfos)
 	//	{
 	//		//GameBoard;
 	//		Result = FMath::Max(Result, Search(Depth - 1, bMax));
@@ -40,7 +39,7 @@ FMoveResult AChessPlayerAI::Search(int32 Depth, bool bMax)
 	//else
 	//{
 	//	// Team 1
-	//	for (auto& MR : MoveResults)
+	//	for (auto& MI : MoveInfos)
 	//	{
 	//		//GameBoard;
 	//		Result = FMath::Min(Result, Search(Depth - 1, !bMax));
@@ -50,55 +49,43 @@ FMoveResult AChessPlayerAI::Search(int32 Depth, bool bMax)
 	return Result;
 }
 
-TArray<FMoveResult> AChessPlayerAI::CalculateAvailableMoves()
+UMoveInfo* AChessPlayerAI::CalculateBestMove()
 {
-	TArray<FMoveResult> Result;
+	TArray<UMoveInfo*> AllMoves = GameBoard->CalculatePiecesMoves();
+	TArray<UMoveInfo*> TeamMoves;
 
-	for (auto& Figure : GameBoard->GetTeam1ActiveFigures())
+	for (auto& MI : AllMoves)
 	{
-		Figure->CalculateMovesResults();
-		Result.Append(Figure->MoveResults);
-	}
-
-	for (auto& Figure : GameBoard->GetTeam2ActiveFigures())
-	{
-		Figure->CalculateMovesResults();
-		Result.Append(Figure->MoveResults);
-	}
-	
-	return Result;
-}
-
-FMoveResult AChessPlayerAI::CalculateBestMove()
-{
-	TArray<FMoveResult> AllMoves = CalculateAvailableMoves();
-	TArray<FMoveResult> TeamMoves;
-
-	for (auto& MR : AllMoves)
-	{
-		if (MR.Figure->GetTeamIndex() == TeamIndex)
+		if (MI->Piece->GetTeamIndex() == TeamIndex)
 		{
-			TeamMoves.Add(MR);
+			TeamMoves.Add(MI);
 		}
 	}
 
 	// Process all move results and find best result
-	FMoveResult BestMoveResult;
-	for (auto& MR : TeamMoves)
+	UMoveInfo* BestMoveInfo = nullptr;
+	for (auto& MI : TeamMoves)
 	{
-		if (BestMoveResult <= MR)
+		if (BestMoveInfo)
 		{
-			BestMoveResult = MR;
+			if (BestMoveInfo->Value <= MI->Value)
+			{
+				BestMoveInfo = MI;
+			}
+		}
+		else
+		{
+			BestMoveInfo = MI;
 		}
 	}
 
 	// Check is there are similar results
-	TArray<FMoveResult> SimilarResults;
-	for (auto& MR : TeamMoves)
+	TArray<UMoveInfo*> SimilarResults;
+	for (auto& MI : TeamMoves)
 	{
-		if (BestMoveResult == MR)
+		if (BestMoveInfo->Value == MI->Value)
 		{
-			SimilarResults.Add(MR);
+			SimilarResults.Add(MI);
 		}
 	}
 
@@ -106,13 +93,8 @@ FMoveResult AChessPlayerAI::CalculateBestMove()
 	if (SimilarResults.Num() > 0)
 	{
 		const int32 Index = FMath::RandRange(0, SimilarResults.Num() - 1);
-		BestMoveResult = SimilarResults[Index];
+		BestMoveInfo = SimilarResults[Index];
 	}
 
-	//if (BestMoveResult.Figure)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("BestMoveResult = %d"), BestMoveResult.Value);
-	//}
-
-	return BestMoveResult;
+	return BestMoveInfo;
 }

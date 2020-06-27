@@ -7,7 +7,7 @@
 
 class AChessPlayerBase;
 
-/** GameMode class to specify pawn, playercontroller, hud and more */
+/** GameMode class to specify pawn, player controller, hud and more */
 UCLASS()
 class CHESS_API AChessGameMode : public AGameModeBase
 {
@@ -17,23 +17,16 @@ public:
 	AChessGameMode();
 	void StartChessGame();
 	bool TogglePause();
-	void GameFinished();
-	bool CheckGameFinished();
-
-	UFUNCTION()
-		void TogglePlayersMoves();
+	void GameReset();
 
 	UPROPERTY()
 		bool bHasActiveGame;
-	
+
 protected:
 	virtual void BeginPlay() override;
-
-	UPROPERTY()
-		bool bGamePaused;
 	
 	UPROPERTY()
-		bool bPlayersMoveSwitch;
+		bool bPlayersMovesSwitch;
 
 	UPROPERTY()
 		int32 MovesCounter;
@@ -48,7 +41,13 @@ protected:
 		class AChessPlayerBase* Player2;
 
 	void SetupChessPlayer(AChessPlayerBase* ChessPlayer, int32 TeamId);
+
+	UFUNCTION()
+		void GameEvaluate();
 	
 	UFUNCTION()
-		void GameFinished(AChessPlayerBase* WinPlayer, int32 WinCode);
+		void GameContinue();
+
+	UFUNCTION()
+		void GameFinished(int32 WinTeamId, int32 WinCode);
 };

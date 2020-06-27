@@ -12,13 +12,12 @@ class CHESS_API AChessPlayerAI : public AChessPlayerBase
 
 public:
 	virtual void TriggerForMakeMove(bool bCondition) override;
-	virtual TArray<FMoveResult> CalculateAvailableMoves() override;
 	
 	/** Calculate best move */
 	UFUNCTION()
-		FMoveResult CalculateBestMove();
+		UMoveInfo* CalculateBestMove();
 	
 	/** Recursive search */
 	UFUNCTION()
-		FMoveResult Search(int32 Depth, bool bMax);
+		UMoveInfo* Search(int32 Depth, bool bMax);
 };

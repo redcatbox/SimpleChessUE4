@@ -3,15 +3,13 @@
 #include "ChessBoard.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
-
-#include "Chess/Figures/FigurePawn.h"
-#include "Chess/Figures/FigureBishop.h"
-#include "Chess/Figures/FigureKnight.h"
-#include "Chess/Figures/FigureRook.h"
-#include "Chess/Figures/FigureKing.h"
-#include "Chess/Figures/FigureQueen.h"
-
-#define LOCTEXT_NAMESPACE "ChessBoard"
+#include "ChessBoardCell.h"
+#include "Chess/Pieces/PieceBishop.h"
+#include "Chess/Pieces/PieceKing.h"
+#include "Chess/Pieces/PieceKnight.h"
+#include "Chess/Pieces/PiecePawn.h"
+#include "Chess/Pieces/PieceQueen.h"
+#include "Chess/Pieces/PieceRook.h"
 
 AChessBoard::AChessBoard()
 {
@@ -23,30 +21,46 @@ AChessBoard::AChessBoard()
 	NumCells = 8;
 	CellSpacing = 200.f;
 
-	// Map initial locations for Team1 figures, Team2 will be mirrored
-	InitialFiguresLocations.Add(0, AFigureRook::StaticClass());
-	InitialFiguresLocations.Add(1, AFigureKnight::StaticClass());
-	InitialFiguresLocations.Add(2, AFigureBishop::StaticClass());
-	InitialFiguresLocations.Add(3, AFigureQueen::StaticClass());
-	InitialFiguresLocations.Add(4, AFigureKing::StaticClass());
-	InitialFiguresLocations.Add(5, AFigureBishop::StaticClass());
-	InitialFiguresLocations.Add(6, AFigureKnight::StaticClass());
-	InitialFiguresLocations.Add(7, AFigureRook::StaticClass());
-	InitialFiguresLocations.Add(8, AFigurePawn::StaticClass());
-	InitialFiguresLocations.Add(9, AFigurePawn::StaticClass());
-	InitialFiguresLocations.Add(10, AFigurePawn::StaticClass());
-	InitialFiguresLocations.Add(11, AFigurePawn::StaticClass());
-	InitialFiguresLocations.Add(12, AFigurePawn::StaticClass());
-	InitialFiguresLocations.Add(13, AFigurePawn::StaticClass());
-	InitialFiguresLocations.Add(14, AFigurePawn::StaticClass());
-	InitialFiguresLocations.Add(15, AFigurePawn::StaticClass());
+	// Map initial locations for Team1 Pieces, Team2 will be mirrored
+	StartingPositions.Add(TEXT("1Ra1"));
+	StartingPositions.Add(TEXT("1Nb1"));
+	StartingPositions.Add(TEXT("1Bc1"));
+	StartingPositions.Add(TEXT("1Qd1"));
+	StartingPositions.Add(TEXT("1Ke1"));
+	StartingPositions.Add(TEXT("1Bf1"));
+	StartingPositions.Add(TEXT("1Ng1"));
+	StartingPositions.Add(TEXT("1Rh1"));
+	StartingPositions.Add(TEXT("1a2"));
+	StartingPositions.Add(TEXT("1b2"));
+	StartingPositions.Add(TEXT("1c2"));
+	StartingPositions.Add(TEXT("1d2"));
+	StartingPositions.Add(TEXT("1e2"));
+	StartingPositions.Add(TEXT("1f2"));
+	StartingPositions.Add(TEXT("1g2"));
+	StartingPositions.Add(TEXT("1h2"));
+	StartingPositions.Add(TEXT("2a7"));
+	StartingPositions.Add(TEXT("2b7"));
+	StartingPositions.Add(TEXT("2c7"));
+	StartingPositions.Add(TEXT("2d7"));
+	StartingPositions.Add(TEXT("2e7"));
+	StartingPositions.Add(TEXT("2f7"));
+	StartingPositions.Add(TEXT("2g7"));
+	StartingPositions.Add(TEXT("2h7"));
+	StartingPositions.Add(TEXT("2Ra8"));
+	StartingPositions.Add(TEXT("2Nb8"));
+	StartingPositions.Add(TEXT("2Bc8"));
+	StartingPositions.Add(TEXT("2Qd8"));
+	StartingPositions.Add(TEXT("2Ke8"));
+	StartingPositions.Add(TEXT("2Bf8"));
+	StartingPositions.Add(TEXT("2Ng8"));
+	StartingPositions.Add(TEXT("2Rh8"));
 }
 
 void AChessBoard::PrepareGameBoard()
 {
 	CreateGameCells();
 	CreateNonGameCells();
-	CreateFigures();
+	CreatePieces();
 }
 
 void AChessBoard::CreateGameCells()
@@ -83,68 +97,92 @@ void AChessBoard::CreateGameCells()
 
 void AChessBoard::CreateNonGameCells()
 {
-	// Non game cells for beaten figures
-	const int32 NumCellsX = InitialFiguresLocations.Num() / 4;
-	const int32 NumCellsY = NumCellsX * 2;
-	const int32 NumCellsTotal = NumCellsX * NumCellsY;
-	const FVector2D Size = FVector2D(NumCellsY * CellSpacing, NumCellsX * CellSpacing);
-	const FVector InitialOffset = FVector(0.f, CellSpacing * 7, 0.f) + GetActorLocation();
+	// Non game cells for beaten Pieces
+	const int32 NumCellsNG = 4;
+	const int32 NumCellsTotal = NumCellsNG * NumCellsNG;
+	const float Size = NumCellsNG * CellSpacing;
 
+	// Team1
+	FVector InitialOffset = FVector(-CellSpacing * 2.f, CellSpacing * 6.5f, 0.f) + GetActorLocation();
 	for (int32 CellIndex = 0; CellIndex < NumCellsTotal; CellIndex++)
 	{
-		const int32 CellIndexX = CellIndex % NumCellsX;
-		const int32 CellIndexY = CellIndex * 2 / NumCellsY;
-		const float YOffset = CellIndexX * CellSpacing - Size.Y / 2 + CellSpacing / 2;
-		const float XOffset = CellIndexY * CellSpacing - Size.X / 2 + CellSpacing / 2;
+		const int32 CellIndexX = CellIndex % NumCellsNG;
+		const int32 CellIndexY = CellIndex / NumCellsNG;
+		const float YOffset = CellIndexX * CellSpacing - Size / 2 + CellSpacing / 2;
+		const float XOffset = CellIndexY * CellSpacing - Size / 2 + CellSpacing / 2;
 		const FVector CellLocation = FVector(XOffset, YOffset, 0.f) + InitialOffset;
 		AChessBoardCell* NewCell = GetWorld()->SpawnActor<AChessBoardCell>(CellLocation, FRotator::ZeroRotator);
 		NewCell->SetCellSize(CellSpacing);
 		NewCell->CellAddress = FIntPoint(CellIndexX + 100, CellIndexY + 100);
 		NewCell->bIsNonGameCell = true;
-		CellsBeaten.Add(NewCell);
+		CellsBeaten1.Add(NewCell);
+	}
+
+	// Team2
+	InitialOffset = FVector(CellSpacing * 2.f, CellSpacing * 6.5f, 0.f) + GetActorLocation();
+	for (int32 CellIndex = 0; CellIndex < NumCellsTotal; CellIndex++)
+	{
+		const int32 CellIndexX = CellIndex % NumCellsNG;
+		const int32 CellIndexY = CellIndex / NumCellsNG;
+		const float YOffset = CellIndexX * CellSpacing - Size / 2 + CellSpacing / 2;
+		const float XOffset = CellIndexY * CellSpacing - Size / 2 + CellSpacing / 2;
+		const FVector CellLocation = FVector(XOffset, YOffset, 0.f) + InitialOffset;
+		AChessBoardCell* NewCell = GetWorld()->SpawnActor<AChessBoardCell>(CellLocation, FRotator::ZeroRotator);
+		NewCell->SetCellSize(CellSpacing);
+		NewCell->CellAddress = FIntPoint(CellIndexX + 100, CellIndexY + 100);
+		NewCell->bIsNonGameCell = true;
+		CellsBeaten2.Add(NewCell);
 	}
 }
 
-void AChessBoard::CreateFigures()
+void AChessBoard::CreatePieces()
 {
 	if (GameCells.Num() > 0)
 	{
-		for (auto& Entry : InitialFiguresLocations)
+		for (auto& SP : StartingPositions)
 		{
-			if (Entry.Key <= GameCells.Num())
+			const FPieceInfo PieceInfo = ChessNotationToPieceInfo(SP);
+			AChessBoardCell* Cell = GetCellByAddress(PieceInfo.CellAddress);
+
+			if (PieceInfo.TeamId > 0 && PieceInfo.PieceClass && Cell)
 			{
-				AChessFigureBase* Figure;
+				APieceBase* Piece;
 				FActorSpawnParameters SpawnInfo;
 				SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				//Team1
-				int32 Index = Entry.Key;
-				Figure = GetWorld()->SpawnActor<AChessFigureBase>(Entry.Value, GameCells[Index]->GetActorTransform(), SpawnInfo);
-				Figure->SetTeam(1);
-				Figure->GameBoard = this;
-				Figure->CellAddress = GameCells[Index]->CellAddress;
-				Team1ActiveFigures.Add(Figure);
-				if (Figure->GetClass() == AFigureKing::StaticClass())
+				if (PieceInfo.TeamId == 1)
 				{
-					King1 = Figure;
+					Piece = GetWorld()->SpawnActor<APieceBase>(PieceInfo.PieceClass, Cell->GetActorTransform(), SpawnInfo);
+					Piece->SetTeam(PieceInfo.TeamId);
+					Piece->GameBoard = this;
+					Piece->CellAddress = Cell->CellAddress;
+					Team1ActivePieces.Add(Piece);
+
+					// Store reference to king piece
+					if (Piece->GetClass() == APieceKing::StaticClass())
+					{
+						King1 = Piece;
+					}
 				}
 
 				//Team2
-				Index = GameCells.Num() - 1 - Entry.Key;
-				Figure = GetWorld()->SpawnActor<AChessFigureBase>(Entry.Value, GameCells[Index]->GetActorTransform(), SpawnInfo);
-				Figure->SetTeam(2);
-				Figure->GameBoard = this;
-				Figure->CellAddress = GameCells[Index]->CellAddress;
-				Team2ActiveFigures.Add(Figure);
-				if (Figure->GetClass() == AFigureKing::StaticClass())
+				if (PieceInfo.TeamId == 2)
 				{
-					King2 = Figure;
+					Piece = GetWorld()->SpawnActor<APieceBase>(PieceInfo.PieceClass, Cell->GetActorTransform(), SpawnInfo);
+					Piece->SetTeam(PieceInfo.TeamId);
+					Piece->GameBoard = this;
+					Piece->CellAddress = Cell->CellAddress;
+					Team2ActivePieces.Add(Piece);
+
+					// Store reference to king piece
+					if (Piece->GetClass() == APieceKing::StaticClass())
+					{
+						King2 = Piece;
+					}
 				}
 			}
 		}
-
-		// Hack to mirror queen and king figures from Team2
-		SwapFiguresOnCellsIds(59, 60);
 	}
 }
 
@@ -159,124 +197,307 @@ void AChessBoard::Cleanup()
 	}
 	GameCells.Empty();
 
-	// Destroy non-game cells
-	for (auto& Cell : CellsBeaten)
+	// Destroy team 1 non-game cells
+	for (auto& Cell : CellsBeaten1)
 	{
 		Cell->Highlight(false);
 		Cell->Select(false);
 		Cell->Destroy();
 	}
-	CellsBeaten.Empty();
+	CellsBeaten1.Empty();
 
-	// Destroy team 1 active figures
+	// Destroy team 2 non-game cells
+	for (auto& Cell : CellsBeaten2)
+	{
+		Cell->Highlight(false);
+		Cell->Select(false);
+		Cell->Destroy();
+	}
+	CellsBeaten2.Empty();
+
+	// Destroy team 1 active Pieces
 	King1 = nullptr;
-	for (auto& Figure : Team1ActiveFigures)
+	for (auto& Piece : Team1ActivePieces)
 	{
-		Figure->Destroy();
+		Piece->Destroy();
 	}
-	Team1ActiveFigures.Empty();
+	Team1ActivePieces.Empty();
 
-	// Destroy team 2 active figures
+	// Destroy team 2 active Pieces
 	King2 = nullptr;
-	for (auto& Figure : Team2ActiveFigures)
+	for (auto& Piece : Team2ActivePieces)
 	{
-		Figure->Destroy();
+		Piece->Destroy();
 	}
-	Team2ActiveFigures.Empty();
+	Team2ActivePieces.Empty();
 
-	// Destroy team 1 beaten figures
-	for (auto& Figure : Team1BeatenFigures)
+	// Destroy team 1 beaten Pieces
+	for (auto& Piece : Team1BeatenPieces)
 	{
-		Figure->Destroy();
+		Piece->Destroy();
 	}
-	Team1BeatenFigures.Empty();
+	Team1BeatenPieces.Empty();
 
-	// Destroy team 2 beaten figures
-	for (auto& Figure : Team2BeatenFigures)
+	// Destroy team 2 beaten Pieces
+	for (auto& Piece : Team2BeatenPieces)
 	{
-		Figure->Destroy();
+		Piece->Destroy();
 	}
-	Team2BeatenFigures.Empty();
+	Team2BeatenPieces.Empty();
 }
 
-void AChessBoard::SwapFiguresOnCellsIds(int32 FirstCellId, int32 SecondCellId)
+void AChessBoard::MovePiece(APieceBase* Piece, FIntPoint Address)
 {
-	AChessFigureBase* F1 = GetFigureByAddress(GameCells[FirstCellId]->CellAddress);
-	AChessFigureBase* F2 = GetFigureByAddress(GameCells[SecondCellId]->CellAddress);
-
-	if (F1 && F2)
+	if (Piece)
 	{
-		F1->CellAddress = GameCells[SecondCellId]->CellAddress;
-		F1->SetActorLocation(GameCells[SecondCellId]->GetActorLocation());
-		F2->CellAddress = GameCells[FirstCellId]->CellAddress;
-		F2->SetActorLocation(GameCells[FirstCellId]->GetActorLocation());
-	}
-}
+		Piece->CellsAvailableToMove.Empty();
+		Piece->MoveInfos.Empty();
 
-void AChessBoard::MoveFigure(AChessFigureBase* Figure, FIntPoint Address)
-{
-	if (Figure)
-	{
-		Figure->CellsAvailableToMove.Empty();
-		Figure->MoveResults.Empty();
-
-		AChessBoardCell* FigureCell = GetCellByAddress(Figure->CellAddress);
+		AChessBoardCell* PieceCell = GetCellByAddress(Piece->CellAddress);
 		AChessBoardCell* NextCell = GetCellByAddress(Address);
-		if (FigureCell && NextCell)
+		if (PieceCell && NextCell)
 		{
-			//const FString Log = CellAddressToHumanFormat(Figure->CellAddress) + TEXT(" -> ") + CellAddressToHumanFormat(Address);
-			//UE_LOG(LogTemp, Warning, TEXT("Team %d %s %s"), Figure->GetTeamIndex(), *Figure->FriendlyName, *Log);
-
-			AChessFigureBase* OtherFigure = GetFigureByAddress(Address);
-			if (OtherFigure)
+			APieceBase* OtherPiece = GetPieceByAddress(Address);
+			if (OtherPiece)
 			{
-				// Move beaten figure out of board
-				Figure->bIsMoved = true;
-				SetFigureBeaten(OtherFigure);
+				// Move beaten Piece out of board
+				Piece->bIsMoved = true;
+				SetPieceBeaten(OtherPiece);
 			}
 
-			// Move figure to selected cell
-			Figure->bIsMoved = true;
-			Figure->CellAddress = NextCell->CellAddress;
-			Figure->PlayMoveFigureAnim(Figure->GetActorLocation(), NextCell->GetActorLocation());
+			// Move Piece to selected cell
+			Piece->bIsMoved = true;
+			Piece->CellAddress = NextCell->CellAddress;
+			Piece->PlayMovePieceAnim(Piece->GetActorLocation(), NextCell->GetActorLocation());
 		}
 	}
 }
 
-void AChessBoard::SetFigureBeaten(AChessFigureBase* Figure)
+void AChessBoard::SetPieceBeaten(APieceBase* Piece)
 {
-	Figure->bIsBeaten = true;
+	Piece->bIsBeaten = true;
 
-	if (Figure->GetTeamIndex() == 1)
+	if (Piece->GetTeamIndex() == 1)
 	{
-		Team1ActiveFigures.RemoveSwap(Figure);
-		Team1BeatenFigures.Add(Figure);
+		Team1ActivePieces.RemoveSwap(Piece);
+		Team1BeatenPieces.Add(Piece);
 
-		for (int i = 0; i < CellsBeaten.Num() / 2 - 1; i++)
+		for (int i = 0; i < CellsBeaten1.Num() / 2 - 1; i++)
 		{
-			if (!GetFigureByAddress(CellsBeaten[i]->CellAddress))
+			if (!GetPieceByAddress(CellsBeaten1[i]->CellAddress))
 			{
-				Figure->CellAddress = CellsBeaten[i]->CellAddress;
-				Figure->PlayMoveFigureAnim(Figure->GetActorLocation(), CellsBeaten[i]->GetActorLocation());
+				Piece->CellAddress = CellsBeaten1[i]->CellAddress;
+				Piece->PlayMovePieceAnim(Piece->GetActorLocation(), CellsBeaten1[i]->GetActorLocation(), false);
 				break;
 			}
 		}
 	}
-	else
+	else if (Piece->GetTeamIndex() == 2)
 	{
-		Team2ActiveFigures.RemoveSwap(Figure);
-		Team2BeatenFigures.Add(Figure);
+		Team2ActivePieces.RemoveSwap(Piece);
+		Team2BeatenPieces.Add(Piece);
 
-		for (int i = CellsBeaten.Num() - 1; i > CellsBeaten.Num() / 2; i--)
+		for (int i = CellsBeaten2.Num() - 1; i > CellsBeaten2.Num() / 2; i--)
 		{
-			if (!GetFigureByAddress(CellsBeaten[i]->CellAddress))
+			if (!GetPieceByAddress(CellsBeaten2[i]->CellAddress))
 			{
-				Figure->CellAddress = CellsBeaten[i]->CellAddress;
-				Figure->PlayMoveFigureAnim(Figure->GetActorLocation(), CellsBeaten[i]->GetActorLocation());
+				Piece->CellAddress = CellsBeaten2[i]->CellAddress;
+				Piece->PlayMovePieceAnim(Piece->GetActorLocation(), CellsBeaten2[i]->GetActorLocation(), false);
 				break;
 			}
 		}
 	}
+}
+
+void AChessBoard::SetPieceActive(APieceBase* Piece)
+{
+	Piece->bIsBeaten = false;
+
+	if (Piece->GetTeamIndex() == 1)
+	{
+		Team1ActivePieces.Add(Piece);
+		Team1BeatenPieces.RemoveSwap(Piece);
+	}
+	else if (Piece->GetTeamIndex() == 2)
+	{
+		Team2ActivePieces.Add(Piece);
+		Team2BeatenPieces.RemoveSwap(Piece);
+	}
+}
+
+void AChessBoard::SwapPieces(APieceBase* FirstPiece, APieceBase* SecondPiece)
+{
+	if (FirstPiece && SecondPiece)
+	{
+		const FIntPoint Tmp = FirstPiece->CellAddress;
+		FirstPiece->CellAddress = SecondPiece->CellAddress;
+		SecondPiece->CellAddress = Tmp;
+
+		FirstPiece->PlayMovePieceAnim(FirstPiece->GetActorLocation(), SecondPiece->GetActorLocation(), false);
+		SecondPiece->PlayMovePieceAnim(SecondPiece->GetActorLocation(), FirstPiece->GetActorLocation());
+	}
+}
+
+TArray<UMoveInfo*> AChessBoard::CalculatePiecesMoves()
+{
+	TArray<UMoveInfo*> Result;
+
+	for (auto& Piece : Team1ActivePieces)
+	{
+		Piece->CalculateMovesResults();
+		Result.Append(Piece->MoveInfos);
+	}
+
+	for (auto& Piece : Team2ActivePieces)
+	{
+		Piece->CalculateMovesResults();
+		Result.Append(Piece->MoveInfos);
+	}
+
+	return Result;
+}
+
+void AChessBoard::EvaluateGame()
+{
+	TArray<UMoveInfo*> AllMoves = CalculatePiecesMoves();
+	TArray<UMoveInfo*> Team1Moves;
+	TArray<UMoveInfo*> Team2Moves;
+
+	for (auto& M : AllMoves)
+	{
+		if (M->Piece->GetTeamIndex() == 1)
+		{
+			Team1Moves.Add(M);
+		}
+
+		if (M->Piece->GetTeamIndex() == 2)
+		{
+			Team2Moves.Add(M);
+		}
+	}
+
+
+	//Stalemate
+	if (Team1Moves.Num() == 0)
+	{
+		OnGameFinished.Broadcast(1, 1);
+		return;
+	}
+
+	if (Team2Moves.Num() == 0)
+	{
+		OnGameFinished.Broadcast(2, 1);
+		return;
+	}
+	//Stalemate
+
+
+	//Check
+
+
+
+	//Check
+
+
+	//Checkmate 1
+	if (King1->bIsBeaten)
+	{
+		OnGameFinished.Broadcast(2, 0);
+		return;
+	}
+
+	bool bKing1HasNoMoves = false;
+	bool bKing1IsUnderAttack = false;
+	King1->CalculateMovesResults();
+	if (King1->MoveInfos.Num() == 0)
+	{
+		bKing1HasNoMoves = true;
+	}
+
+	AChessBoardCell* King1Cell = GetCellByAddress(King1->CellAddress);
+	for (auto& M : Team2Moves)
+	{
+		if (GetCellByAddress(M->CellAddress) == King1Cell)
+		{
+			bKing1IsUnderAttack = true;
+			break;
+		}
+	}
+
+	const bool bKing1Checkmate = bKing1HasNoMoves && bKing1IsUnderAttack;
+	if (bKing1Checkmate)
+	{
+		OnGameFinished.Broadcast(1, 0);
+		return;
+	}
+	//Checkmate 1
+
+
+	//Checkmate 2
+	if (King2->bIsBeaten)
+	{
+		OnGameFinished.Broadcast(1, 0);
+		return;
+	}
+
+	bool bKing2HasNoMoves = false;
+	bool bKing2IsUnderAttack = false;
+	King2->CalculateMovesResults();
+	if (King2->MoveInfos.Num() == 0)
+	{
+		bKing2HasNoMoves = true;
+	}
+
+	AChessBoardCell* King2Cell = GetCellByAddress(King2->CellAddress);
+	for (auto& M : Team1Moves)
+	{
+		if (GetCellByAddress(M->CellAddress) == King2Cell)
+		{
+			bKing2IsUnderAttack = true;
+			break;
+		}
+	}
+
+	const bool bKing2Checkmate = bKing2HasNoMoves && bKing2IsUnderAttack;
+	if (bKing2Checkmate)
+	{
+		OnGameFinished.Broadcast(1, 0);
+		return;
+	}
+
+	OnGameContinue.Broadcast();
+}
+
+TArray<APieceBase*> AChessBoard::GetTeamActivePieces(int32 TeamId) const
+{
+	TArray<APieceBase*> Result;
+
+	if (TeamId == 1)
+	{
+		Result = Team1ActivePieces;
+	}
+	else if (TeamId == 2)
+	{
+		Result = Team2ActivePieces;
+	}
+
+	return Result;
+}
+
+TArray<APieceBase*> AChessBoard::GetTeamBeatenPieces(int32 TeamId) const
+{
+	TArray<APieceBase*> Result;
+
+	if (TeamId == 1)
+	{
+		Result = Team1BeatenPieces;
+	}
+	else if (TeamId == 2)
+	{
+		Result = Team2BeatenPieces;
+	}
+
+	return Result;
 }
 
 AChessBoardCell* AChessBoard::GetCellByAddress(FIntPoint Address)
@@ -299,62 +520,157 @@ AChessBoardCell* AChessBoard::GetCellByAddress(FIntPoint Address)
 	return nullptr;
 }
 
-AChessFigureBase* AChessBoard::GetFigureByAddress(FIntPoint Address)
+APieceBase* AChessBoard::GetPieceByAddress(FIntPoint Address)
 {
-	for (auto& Figure : Team1ActiveFigures)
+	for (auto& Piece : Team1ActivePieces)
 	{
-		if (Figure->CellAddress == Address)
+		if (Piece->CellAddress == Address)
 		{
-			return Figure;
+			return Piece;
 		}
 	}
 
-	for (auto& Figure : Team1BeatenFigures)
+	for (auto& Piece : Team1BeatenPieces)
 	{
-		if (Figure->CellAddress == Address)
+		if (Piece->CellAddress == Address)
 		{
-			return Figure;
-		}
-	}
-	
-	for (auto& Figure : Team2ActiveFigures)
-	{
-		if (Figure->CellAddress == Address)
-		{
-			return Figure;
+			return Piece;
 		}
 	}
 
-	for (auto& Figure : Team2BeatenFigures)
+	for (auto& Piece : Team2ActivePieces)
 	{
-		if (Figure->CellAddress == Address)
+		if (Piece->CellAddress == Address)
 		{
-			return Figure;
+			return Piece;
 		}
 	}
-	
+
+	for (auto& Piece : Team2BeatenPieces)
+	{
+		if (Piece->CellAddress == Address)
+		{
+			return Piece;
+		}
+	}
+
 	return nullptr;
 }
 
-FString AChessBoard::CellAddressToHumanFormat(FIntPoint Address)
+FString AChessBoard::CellAddressToChessNotation(FIntPoint& Address)
 {
 	FString Result;
-
 	switch (Address.X)
 	{
-	case 0: Result += TEXT("A"); break;
-	case 1: Result += TEXT("B"); break;
-	case 2: Result += TEXT("C"); break;
-	case 3: Result += TEXT("D"); break;
-	case 4: Result += TEXT("E"); break;
-	case 5: Result += TEXT("F"); break;
-	case 6: Result += TEXT("G"); break;
-	case 7: Result += TEXT("H"); break;
-	default: TEXT("Error!");
+	case 0: Result += TEXT("a"); break;
+	case 1: Result += TEXT("b"); break;
+	case 2: Result += TEXT("c"); break;
+	case 3: Result += TEXT("d"); break;
+	case 4: Result += TEXT("e"); break;
+	case 5: Result += TEXT("f"); break;
+	case 6: Result += TEXT("g"); break;
+	case 7: Result += TEXT("h"); break;
+	default: Result = TEXT("Not found!"); return Result;
 	}
 
 	Result += FString::FromInt(Address.Y + 1);
 	return Result;
 }
 
-#undef LOCTEXT_NAMESPACE
+FIntPoint AChessBoard::ChessNotationToCellAddress(FString& Info)
+{
+	if (Info.Len() == 2)
+	{
+		const FString InfoLower = Info.ToLower();
+		int32 AddressX;
+		switch (InfoLower[0])
+		{
+		case 'a': AddressX = 0; break;
+		case 'b': AddressX = 1; break;
+		case 'c': AddressX = 2; break;
+		case 'd': AddressX = 3; break;
+		case 'e': AddressX = 4; break;
+		case 'f': AddressX = 5; break;
+		case 'g': AddressX = 6; break;
+		case 'h': AddressX = 7; break;
+		default: AddressX = -1;
+		}
+
+		const int32 AddressY = (InfoLower[1] - '0') - 1;
+		return FIntPoint(AddressX, AddressY);
+	}
+
+	return FIntPoint(-1, -1);
+}
+
+FPieceInfo AChessBoard::ChessNotationToPieceInfo(FString& Info)
+{
+	const FString InfoLower = Info.ToLower();
+
+	// TeamId
+	const int32 TeamId = InfoLower[0] - '0';
+
+	// Pawn address by default
+	TCHAR PieceChar = 'p';
+	if (Info.Len() == 4)
+	{
+		// Non-pawn address
+		PieceChar = InfoLower[1];
+	}
+
+	// Piece class
+	TSubclassOf<APieceBase> PieceClass;
+	switch (PieceChar)
+	{
+	case 'k': PieceClass = APieceKing::StaticClass(); break;
+	case 'q': PieceClass = APieceQueen::StaticClass(); break;
+	case 'r': PieceClass = APieceRook::StaticClass(); break;
+	case 'b': PieceClass = APieceBishop::StaticClass(); break;
+	case 'n': PieceClass = APieceKnight::StaticClass(); break;
+	case 'p': PieceClass = APiecePawn::StaticClass(); break;
+	default: PieceClass = nullptr;
+	}
+
+	FString Address;
+	for (int32 i = InfoLower.Len() - 2; i < InfoLower.Len(); i++)
+	{
+		Address.AppendChar(InfoLower[i]);
+	}
+
+	const FIntPoint CellAddress = ChessNotationToCellAddress(Address);
+
+	return FPieceInfo(TeamId, PieceClass, CellAddress);
+}
+
+FString AChessBoard::PieceInfoToChessNotation(FPieceInfo& Info)
+{
+	// TeamId
+	FString Result = FString::FromInt(Info.TeamId);
+
+	// Piece class
+	if (Info.PieceClass == APieceKing::StaticClass())
+	{
+		Result.AppendChar('K');
+	}
+	else if (Info.PieceClass == APieceQueen::StaticClass())
+	{
+		Result.AppendChar('Q');
+	}
+	else if (Info.PieceClass == APieceRook::StaticClass())
+	{
+		Result.AppendChar('R');
+	}
+	else if (Info.PieceClass == APieceBishop::StaticClass())
+	{
+		Result.AppendChar('B');
+	}
+	else if (Info.PieceClass == APieceKnight::StaticClass())
+	{
+		Result.AppendChar('N');
+	}
+
+	FString Address = CellAddressToChessNotation(Info.CellAddress);
+	Result.Append(Address);
+
+	return Result;
+}

@@ -12,14 +12,13 @@ AChessPlayer::AChessPlayer()
 {
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	RootComponent = SpringArm;
-	SpringArm->TargetArmLength = 2300.f;
-	SpringArm->bUsePawnControlRotation = true;
-	SpringArm->bDoCollisionTest = false;
-	SpringArm->bEnableCameraRotationLag = true;
-	SpringArm->bInheritPitch = true;
-	SpringArm->bInheritYaw = true;
+	SpringArm->TargetArmLength = 2000.f;
+	SpringArm->bUsePawnControlRotation = false;
+	SpringArm->bInheritPitch = false;
+	SpringArm->bInheritYaw = false;
 	SpringArm->bInheritRoll = false;
-	bCameraRotation = false;
+	SpringArm->bDoCollisionTest = false;
+	SpringArm->SetRelativeRotation(FRotator(-89.f, 0.f, 0.f));
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(SpringArm);
@@ -29,29 +28,42 @@ AChessPlayer::AChessPlayer()
 	bCanTraceForCells = false;
 }
 
+void AChessPlayer::AdjustCamera()
+{
+	if (CameraComponent && GEngine->GameViewport->Viewport)
+	{
+		const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+		if (ViewportSize.Y != 0)
+		{
+			const float ViewportAspectRatio = ViewportSize.X / ViewportSize.Y;
+
+			if (ViewportAspectRatio <= 1.51f)
+			{
+				SpringArm->TargetArmLength = 1500.f;
+			}
+			else if (ViewportAspectRatio <= 1.8f)
+			{
+				SpringArm->TargetArmLength = 2000.f;
+			}
+			else
+			{
+				SpringArm->TargetArmLength = 2300.f;
+			}
+		}
+	}
+}
+
 void AChessPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	check(PlayerInputComponent);
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// Axis events
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-
 	// Actions
-	PlayerInputComponent->BindAxis("Zoom", this, &AChessPlayer::CameraZoom);
 	PlayerInputComponent->BindAction("Click", IE_Pressed, this, &AChessPlayer::TriggerClick);
 
 	// Touch events
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AChessPlayer::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &AChessPlayer::TouchStopped);
-}
-
-void AChessPlayer::CameraZoom(float Val)
-{
-	float Length = SpringArm->TargetArmLength - 100.f * Val;
-	Length = FMath::Clamp(Length, 1500.f, 2500.f);
-	SpringArm->TargetArmLength = Length;
 }
 
 void AChessPlayer::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
@@ -88,8 +100,8 @@ void AChessPlayer::Tick(float DeltaSeconds)
 }
 
 /**	Trace for cells
- *	If nothing selected - highlight only cells with our figures
- *	If our figure selected - highlight all other cells
+ *	If nothing selected - highlight only cells with our Pieces
+ *	If our Piece selected - highlight all other cells
  */
 void AChessPlayer::TraceForCell(const FVector& Start, const FVector& End)
 {
@@ -131,35 +143,41 @@ void AChessPlayer::CheckTraceForCell(FHitResult HitResult)
 }
 
 /**	Trigger click action
- *	If nothing selected - select cell with our figure
- *	If our figure selected - select other our figure or perform move
+ *	If nothing selected - select cell with our Piece
+ *	If our Piece selected - select other our Piece or perform move
  */
 void AChessPlayer::TriggerClick()
 {
 	if (bCanMakeMove && CurrentCellFocus)
 	{
-		AChessFigureBase* OtherFigure = GameBoard->GetFigureByAddress(CurrentCellFocus->CellAddress);
-		if (OtherFigure)
+		APieceBase* OtherPiece = GameBoard->GetPieceByAddress(CurrentCellFocus->CellAddress);
+		if (OtherPiece)
 		{
-			if (TeamIndex == OtherFigure->GetTeamIndex())
+			if (TeamIndex == OtherPiece->GetTeamIndex())
 			{
-				SelectFigure(OtherFigure);
+				SelectPiece(OtherPiece);
 			}
 			else
 			{
-				if (SelectedFigure)
+				if (SelectedPiece)
 				{
-					const FMoveResult Move = FMoveResult(0, CurrentCellFocus->CellAddress, SelectedFigure);
-					MakeMove(Move);
+					UMoveInfo* MoveInfo = NewObject<UMoveInfo>();
+					MoveInfo->Value = 0;
+					MoveInfo->CellAddress = CurrentCellFocus->CellAddress;
+					MoveInfo->Piece = SelectedPiece;
+					MakeMove(MoveInfo);
 				}
 			}
 		}
 		else
 		{
-			if (SelectedFigure)
+			if (SelectedPiece)
 			{
-				const FMoveResult Move = FMoveResult(0, CurrentCellFocus->CellAddress, SelectedFigure);
-				MakeMove(Move);
+				UMoveInfo* MoveInfo = NewObject<UMoveInfo>();
+				MoveInfo->Value = 0;
+				MoveInfo->CellAddress = CurrentCellFocus->CellAddress;
+				MoveInfo->Piece = SelectedPiece;
+				MakeMove(MoveInfo);
 			}
 		}
 	}
@@ -172,17 +190,17 @@ void AChessPlayer::TriggerForMakeMove(bool bCondition)
 	UpdateCellsToHighlight();
 }
 
-void AChessPlayer::MakeMove(FMoveResult Move)
+void AChessPlayer::MakeMove(UMoveInfo* Move)
 {
-	if (SelectedFigure->CheckIsCellReachable(Move.CellAddress))
+	if (SelectedPiece->CheckIsCellReachable(Move->CellAddress))
 	{
-		if (Move.Figure)
+		if (Move->Piece)
 		{
 			bCanTraceForCells = false;
-			GameBoard->MoveFigure(Move.Figure, Move.CellAddress);
+			GameBoard->MovePiece(Move->Piece, Move->CellAddress);
 			CurrentCellFocus->Highlight(false);
 			CurrentCellFocus = nullptr;
-			Move.Figure->OnFigureMoveAnimFinished.AddDynamic(this, &AChessPlayerBase::PerformMove);
+			Move->Piece->OnPieceMoveAnimFinished.AddDynamic(this, &AChessPlayerBase::PerformMove);
 		}
 	}
 }
@@ -191,9 +209,9 @@ void AChessPlayer::UpdateCellsToHighlight()
 {
 	CellsToHighlight.Empty();
 
-	for (auto& Figure : GameBoard->GetTeam1ActiveFigures())
+	for (auto& Piece : GameBoard->GetTeamActivePieces(1))
 	{
-		AChessBoardCell* Cell = GameBoard->GetCellByAddress(Figure->CellAddress);
+		AChessBoardCell* Cell = GameBoard->GetCellByAddress(Piece->CellAddress);
 		if (Cell)
 		{
 			CellsToHighlight.Add(Cell);
@@ -201,7 +219,7 @@ void AChessPlayer::UpdateCellsToHighlight()
 	}
 }
 
-void AChessPlayer::SelectFigure(AChessFigureBase* Figure)
+void AChessPlayer::SelectPiece(APieceBase* Piece)
 {
 	for (auto& Cell : CellsToTurnOff)
 	{
@@ -211,11 +229,11 @@ void AChessPlayer::SelectFigure(AChessFigureBase* Figure)
 	}
 
 	CellsToTurnOff.Empty();
-	SelectedFigure = Figure;
+	SelectedPiece = Piece;
 
-	if (SelectedFigure)
+	if (SelectedPiece)
 	{
-		AChessBoardCell* Cell = GameBoard->GetCellByAddress(SelectedFigure->CellAddress);
+		AChessBoardCell* Cell = GameBoard->GetCellByAddress(SelectedPiece->CellAddress);
 		if (Cell)
 		{
 			Cell->Highlight(false);
@@ -223,9 +241,7 @@ void AChessPlayer::SelectFigure(AChessFigureBase* Figure)
 			CellsToTurnOff.Add(Cell);
 		}
 
-		SelectedFigure->CalculateMovesResults();
-
-		for (auto& CA : SelectedFigure->CellsAvailableToMove)
+		for (auto& CA : SelectedPiece->CellsAvailableToMove)
 		{
 			Cell = GameBoard->GetCellByAddress(CA);
 			if (Cell)
@@ -240,5 +256,5 @@ void AChessPlayer::SelectFigure(AChessFigureBase* Figure)
 
 void AChessPlayer::Resign()
 {
-	OnGameFinished.Broadcast(this, 2);
+	GameBoard->OnGameFinished.Broadcast(TeamIndex, 2);
 }
